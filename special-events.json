@@ -1,0 +1,6 @@
+[
+  { "id": "oscars-2027", "title": "Premios Oscar 2027", "category": "Premios", "league": "Oscars", "start": "2027-03-14T23:00:00Z", "status": "Programado" },
+  { "id": "grammys-2027", "title": "Premios Grammy 2027", "category": "Premios", "league": "Grammys", "start": "2027-02-07T01:00:00Z", "status": "Programado" },
+  { "id": "miss-universe-2026", "title": "Miss Universo 2026", "category": "Concursos", "league": "Miss Universe", "start": "2026-11-21T01:00:00Z", "status": "Programado" },
+  { "id": "latin-grammys-2026", "title": "Latin Grammy 2026", "category": "Premios", "league": "Latin Grammys", "start": "2026-11-13T01:00:00Z", "status": "Programado" }
+]

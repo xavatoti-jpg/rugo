@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EnVivo Chat</title>
+<style>
+  :root { --bg:#0e0e12; --panel:#18181f; --line:#2a2a35; --text:#ececf1; --muted:#9a9aa8; --accent:#9b5cff; --live:#ff4757; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  header { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px; }
+  header a { color:var(--text); text-decoration:none; font-weight:800; font-size:20px; }
+  header a span { color:var(--accent); }
+  main { max-width:960px; margin:0 auto; padding:16px; }
+  input, button { font:inherit; }
+  .search { width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 18px; }
+  .chip { padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
+  .chip.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; cursor:pointer; text-decoration:none; color:inherit; display:block; }
+  .card:hover { border-color:var(--accent); }
+  .meta { font-size:13px; color:var(--muted); display:flex; justify-content:space-between; gap:8px; }
+  .title { font-weight:700; margin:8px 0; }
+  .live { color:var(--live); font-weight:700; }
+  .empty { color:var(--muted); text-align:center; padding:40px 0; }
+
+  /* Sala */
+  .room { display:flex; flex-direction:column; height:calc(100dvh - 59px); max-width:760px; margin:0 auto; }
+  .room-head { padding:12px 16px; border-bottom:1px solid var(--line); }
+  .room-head h1 { font-size:18px; margin:4px 0 0; }
+  .msgs { flex:1; overflow-y:auto; padding:12px 16px; }
+  .msg { padding:3px 0; line-height:1.4; word-wrap:break-word; }
+  .msg b { margin-right:6px; }
+  .sys { color:#ffb347; font-size:14px; padding:4px 0; }
+  form.send { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line); }
+  form.send input { flex:1; padding:12px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); min-width:0; }
+  form.send button, .btn { padding:12px 18px; border:0; border-radius:10px; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
+  .quick { display:flex; gap:6px; padding:0 16px; flex-wrap:wrap; }
+  .quick button { background:var(--panel); border:1px solid var(--line); color:var(--text); border-radius:999px; padding:4px 10px; cursor:pointer; }
+  .namebox { max-width:360px; margin:60px auto; text-align:center; }
+  .namebox input { margin:14px 0; }
+</style>
+</head>
+<body>
+<header><a href="#/">EnVivo<span>Chat</span></a></header>
+<div id="app"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const app = document.getElementById("app");
+let socket = null;
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const colorFor = (name) => `hsl(${[...name].reduce((a,c)=>a+c.charCodeAt(0),0)*47%360} 80% 70%)`;
+const fmtTime = (iso) => new Date(iso).toLocaleString([], { weekday:"short", hour:"numeric", minute:"2-digit" });
+const isLive = (e) => /progress|half|quarter|period|inning|en vivo|live/i.test(e.status) ||
+  (Date.now() > new Date(e.start) && Date.now() - new Date(e.start) < 3*3600e3 && !/final|terminado/i.test(e.status));
+
+function route() {
+  if (socket) { socket.disconnect(); socket = null; }
+  const m = location.hash.match(/^#\/sala\/(.+)$/);
+  m ? showRoom(decodeURIComponent(m[1])) : showHome();
+}
+window.addEventListener("hashchange", route);
+
+// ---------- Página principal ----------
+let filter = "Todos", query = "";
+async function showHome() {
+  app.innerHTML = `<main>
+    <input class="search" id="q" placeholder="Busca un juego, equipo o evento…" value="${esc(query)}">
+    <div class="chips" id="chips"></div>
+    <div class="grid" id="grid"><div class="empty">Cargando…</div></div></main>`;
+  const events = await (await fetch("/api/events")).json();
+  const cats = ["Todos", "En vivo", ...new Set(events.map((e) => e.category))];
+
+  const render = () => {
+    document.getElementById("chips").innerHTML = cats.map((c) =>
+      `<button class="chip ${c===filter?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+    const list = events.filter((e) =>
+      (filter === "Todos" || (filter === "En vivo" ? isLive(e) : e.category === filter)) &&
+      (e.title + " " + e.league).toLowerCase().includes(query.toLowerCase()));
+    document.getElementById("grid").innerHTML = list.length ? list.map((e) => `
+      <a class="card" href="#/sala/${encodeURIComponent(e.id)}">
+        <div class="meta"><span>${esc(e.league)}</span>${isLive(e) ? '<span class="live">● EN VIVO</span>' : `<span>${fmtTime(e.start)}</span>`}</div>
+        <div class="title">${esc(e.title)}</div>
+        <div class="meta"><span>${esc(e.status)}</span><span>💬 ${e.online} en el chat</span></div>
+      </a>`).join("") : `<div class="empty">No hay eventos que coincidan.</div>`;
+  };
+  render();
+  document.getElementById("q").oninput = (ev) => { query = ev.target.value; render(); };
+  document.getElementById("chips").onclick = (ev) => { if (ev.target.dataset.c) { filter = ev.target.dataset.c; render(); } };
+}
+
+// ---------- Sala de chat ----------
+async function showRoom(id) {
+  const res = await fetch("/api/events/" + encodeURIComponent(id));
+  if (!res.ok) { app.innerHTML = `<div class="empty">Esta sala no existe. <a href="#/">Volver</a></div>`; return; }
+  const ev = await res.json();
+  let name = localStorage.getItem("apodo");
+  if (!name) return askName(() => showRoom(id));
+
+  app.innerHTML = `<div class="room">
+    <div class="room-head">
+      <div class="meta"><span>${esc(ev.league)} · ${esc(ev.category)}</span><span id="online">👥 ${ev.online}</span></div>
+      <h1>${esc(ev.title)}</h1>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="quick">${["🔥","🏀","😱","👏","😂","GOOOL ⚽","¡Vamos!"].map((q)=>`<button>${q}</button>`).join("")}</div>
+    <form class="send" id="send"><input id="text" maxlength="300" placeholder="Escribe como ${esc(name)}…" autocomplete="off"><button>Enviar</button></form>
+  </div>`;
+  const msgs = document.getElementById("msgs");
+  const add = (html) => {
+    const atBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 80;
+    msgs.querySelector(".first")?.remove();
+    msgs.insertAdjacentHTML("beforeend", html);
+    while (msgs.children.length > 300) msgs.firstChild.remove();
+    if (atBottom) msgs.scrollTop = msgs.scrollHeight;
+  };
+  const msgHtml = (m) => `<div class="msg"><b style="color:${colorFor(m.name)}">${esc(m.name)}</b>${esc(m.text)}</div>`;
+
+  socket = io();
+  socket.on("connect", () => socket.emit("join", { roomId: id, name }));
+  socket.on("history", (list) => { msgs.innerHTML = list.map(msgHtml).join("") || `<div class="sys first">¡Sé el primero en escribir!</div>`; msgs.scrollTop = msgs.scrollHeight; });
+  socket.on("message", (m) => add(msgHtml(m)));
+  socket.on("system", (t) => t && add(`<div class="sys">⚠️ ${esc(t)}</div>`));
+  socket.on("online", (n) => document.getElementById("online").textContent = `👥 ${n}`);
+
+  const input = document.getElementById("text");
+  document.getElementById("send").onsubmit = (e) => { e.preventDefault(); if (input.value.trim()) socket.emit("message", input.value); input.value = ""; };
+  document.querySelector(".quick").onclick = (e) => { if (e.target.tagName === "BUTTON") socket.emit("message", e.target.textContent); };
+  input.focus();
+}
+
+function askName(done) {
+  app.innerHTML = `<div class="namebox"><h2>Elige un apodo</h2>
+    <input class="search" id="nm" maxlength="20" placeholder="Ej: ReyDelTriple">
+    <button class="btn" id="go">Entrar al chat</button></div>`;
+  const go = () => { const v = document.getElementById("nm").value.trim(); if (v) { localStorage.setItem("apodo", v); done(); } };
+  document.getElementById("go").onclick = go;
+  document.getElementById("nm").onkeydown = (e) => e.key === "Enter" && go();
+}
+
+route();
+</script>
+</body>
+</html>
