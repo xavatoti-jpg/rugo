@@ -74,4 +74,4 @@ function routes(app) {
   });
 }
 
-module.exports = { enabled, userFromToken, routes };
+module.exports = { enabled, userFromToken, routes, admin };

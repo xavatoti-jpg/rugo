@@ -79,6 +79,18 @@
   .poster .d { font-size:12px; color:var(--muted); }
   .attr { font-size:12px; color:var(--muted); margin-top:30px; text-align:center; }
 
+  /* My Chats */
+  .mychats-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; border:1px solid var(--line); font-weight:700; font-size:14px; white-space:nowrap; }
+  .mychats-btn:hover, .mychats-btn.on { border-color:#fdcb6e; color:#fdcb6e; }
+  .mychats-btn .n { background:#fdcb6e; color:#111; border-radius:999px; font-size:11px; padding:1px 6px; }
+  .save-btn { background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:5px 12px; cursor:pointer; font-size:13px; font-weight:700; white-space:nowrap; }
+  .save-btn.on { border-color:#fdcb6e; color:#fdcb6e; }
+  .fav-row { display:flex; align-items:center; gap:10px; }
+  .fav-row .live-card { flex:1; min-width:0; }
+  .unsave { background:none; border:0; color:var(--muted); font-size:18px; cursor:pointer; padding:8px; }
+  .unsave:hover { color:var(--live); }
+  .past { opacity:.55; }
+
   /* Calendario */
   .days { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none; }
   .day { flex:0 0 auto; min-width:62px; text-align:center; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:8px 10px; cursor:pointer; }
@@ -147,6 +159,7 @@ const app = document.getElementById("app");
 const hdr = document.getElementById("hdr");
 let socket = null, genres = [], timer = null;
 let cfg = { auth:false }, sb = null, session = null, me = null;
+let favs = new Set(); // salas guardadas en My Chats
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const colorFor = (name) => `hsl(${[...name].reduce((a,c)=>a+c.charCodeAt(0),0)*47%360} 80% 70%)`;
@@ -177,6 +190,25 @@ async function loadMe() {
   if (!session) return;
   const r = await fetch("/api/me", { headers: authHeader() });
   if (r.ok) me = await r.json();
+  if (me?.username) await loadFavs();
+}
+
+async function loadFavs() {
+  try {
+    const r = await fetch("/api/favorites", { headers: authHeader() });
+    favs = new Set(r.ok ? (await r.json()).map((f) => f.id) : []);
+  } catch { favs = new Set(); }
+}
+
+async function toggleFav(id) {
+  if (!me?.username) return openLogin("signup");
+  const saved = favs.has(id);
+  const r = await fetch("/api/favorites/" + encodeURIComponent(id), { method: saved ? "DELETE" : "POST", headers: authHeader() });
+  if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || "Something went wrong"); return favs.has(id); }
+  saved ? favs.delete(id) : favs.add(id);
+  const n = document.querySelector(".mychats-btn .n");
+  if (n) { n.textContent = favs.size; n.style.display = favs.size ? "" : "none"; }
+  return favs.has(id);
 }
 
 function openLogin(mode) {
@@ -207,7 +239,7 @@ function openLogin(mode) {
 
 async function logout() {
   await sb.auth.signOut();
-  session = null; me = null;
+  session = null; me = null; favs = new Set();
   route();
 }
 
@@ -240,7 +272,7 @@ function header(active) {
   let right = "";
   if (cfg.auth) {
     right = me?.username
-      ? `<button class="avatar" id="av" style="${me.avatar ? `background-image:url('${esc(me.avatar)}')` : `color:${colorFor(me.username)}`}">${me.avatar ? "" : esc(me.username[0].toUpperCase())}</button>`
+      ? `<a class="mychats-btn ${active === "my" ? "on" : ""}" href="#/mychats">★ My Chats <span class="n" style="${favs.size ? "" : "display:none"}">${favs.size}</span></a><button class="avatar" id="av" style="${me.avatar ? `background-image:url('${esc(me.avatar)}')` : `color:${colorFor(me.username)}`}">${me.avatar ? "" : esc(me.username[0].toUpperCase())}</button>`
       : `<button class="ghost-btn" id="signinBtn">Sign in</button><button class="login-btn" id="signupBtn">Sign up</button>`;
   }
   hdr.innerHTML = `<a class="logo" href="#/">Rug<span>o</span></a>
@@ -272,6 +304,7 @@ function route() {
   let m;
   if ((m = h.match(/^#\/room\/(.+)$/))) return showRoom(decodeURIComponent(m[1]));
   if (h === "#/categories") return showCategories();
+  if (h === "#/mychats") return showMyChats();
   if (h === "#/calendar") return showCalendar(null);
   if ((m = h.match(/^#\/g\/([^/]+)\/calendar$/))) return showCalendar(m[1]);
   if ((m = h.match(/^#\/g\/([^/]+)$/))) return showGenre(m[1]);
@@ -309,6 +342,41 @@ function liveCard(e, rank) {
     </div>
     <div class="go">${e.online ? `👥 ${e.online}` : "Join"}</div>
   </a>`;
+}
+
+// ---------- My Chats: favoritos ----------
+async function showMyChats() {
+  header("my");
+  if (!cfg.auth) return (location.hash = "#/");
+  if (!me?.username) {
+    app.innerHTML = `<main><h1>★ My Chats</h1><div class="empty">Save your favorite chats and find them here.<br><br><button class="btn" id="su">Sign up to save chats</button></div></main>`;
+    document.getElementById("su").onclick = () => openLogin("signup");
+    return;
+  }
+  app.innerHTML = `<main><h1>★ My Chats</h1><p class="sub">Your saved chats.</p><div id="fav"><div class="empty">Loading…</div></div></main>`;
+  if (!genres.length) await loadGenres();
+  const r = await fetch("/api/favorites", { headers: authHeader() });
+  const list = r.ok ? await r.json() : [];
+  favs = new Set(list.map((f) => f.id));
+  const live = list.filter((e) => e.state === "live").sort((a, b) => b.online - a.online);
+  const soon = list.filter((e) => e.state === "upcoming").sort((a, b) => new Date(a.start) - new Date(b.start));
+  const past = list.filter((e) => e.state === "done");
+  const row = (e, isPast) => `<div class="fav-row ${isPast ? "past" : ""}">
+      ${isPast ? `<div class="live-card"><div class="body"><div class="top">Ended</div><div class="title">${esc(e.title)}</div></div></div>`
+        : e.state === "upcoming" ? `<a class="live-card" href="#/room/${encodeURIComponent(e.id)}"><div class="body"><div class="top">${genreById(e.genre)?.emoji || ""} ${esc(e.league || "")}</div><div class="title">${esc(e.title)}</div><div class="score">${e.allDay ? new Date(e.start).toLocaleDateString("en-US", { weekday:"short", month:"short", day:"numeric", timeZone:"UTC" }) : new Date(e.start).toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}</div></div><div class="go">Open</div></a>`
+        : liveCard(e)}
+      <button class="unsave" data-id="${esc(e.id)}" title="Remove from My Chats">✕</button></div>`;
+  const section = (title, items, isPast) => items.length ? `<h2>${title}</h2><div class="live-list">${items.map((e) => row(e, isPast)).join("")}</div>` : "";
+  document.getElementById("fav").innerHTML = list.length
+    ? section(`<span class="dot"></span> Live now`, live) + section("📅 Coming up", soon) + section("Past", past, true)
+    : `<div class="empty">You haven't saved any chats yet.<br>Open any chat and tap <b>☆ Save</b>.<br><br><a href="#/">Browse live chats</a></div>`;
+  document.getElementById("fav").onclick = async (e) => {
+    const id = e.target.closest(".unsave")?.dataset.id;
+    if (!id) return;
+    await toggleFav(id);
+    showMyChats();
+  };
+  header("my");
 }
 
 // ---------- Categorías ----------
@@ -429,13 +497,19 @@ async function showRoom(id) {
   const isLive = ev.state === "live" && !ev.always && !ev.ongoing;
   app.innerHTML = `<div class="room">
     <div class="room-head">
-      <div class="meta"><span><a href="javascript:history.back()" style="margin-right:6px">←</a>${ev.ongoing ? "🍿 " : isLive ? `<span class="badge-live"><span class="dot"></span>LIVE</span> · ` : ""}${esc(ev.league)}${ev.state === "upcoming" ? (ev.allDay ? ` · ${new Date(ev.start).toLocaleDateString("en-US", { month:"short", day:"numeric", timeZone:"UTC" })}` : ` · Starts ${new Date(ev.start).toLocaleString("en-US", { weekday:"short", hour:"numeric", minute:"2-digit" })}`) : ""}</span><span id="online">👥 ${ev.online}</span></div>
+      <div class="meta"><span><a href="javascript:history.back()" style="margin-right:6px">←</a>${ev.ongoing ? "🍿 " : isLive ? `<span class="badge-live"><span class="dot"></span>LIVE</span> · ` : ""}${esc(ev.league)}${ev.state === "upcoming" ? (ev.allDay ? ` · ${new Date(ev.start).toLocaleDateString("en-US", { month:"short", day:"numeric", timeZone:"UTC" })}` : ` · Starts ${new Date(ev.start).toLocaleString("en-US", { weekday:"short", hour:"numeric", minute:"2-digit" })}`) : ""}</span><span style="display:flex;gap:10px;align-items:center">${cfg.auth ? `<button class="save-btn ${favs.has(ev.id) ? "on" : ""}" id="saveBtn">${favs.has(ev.id) ? "★ Saved" : "☆ Save"}</button>` : ""}<span id="online">👥 ${ev.online}</span></span></div>
       <h1>${esc(ev.title)}</h1>
       ${ev.score ? `<div class="meta" style="margin-top:4px"><span>${esc(ev.score)} ${ev.detail ? "· " + esc(ev.detail) : ""}</span></div>` : ""}
     </div>
     <div class="msgs" id="msgs"></div>
     <div id="composer"></div>
   </div>`;
+  document.getElementById("saveBtn")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const on = await toggleFav(ev.id);
+    btn.classList.toggle("on", on);
+    btn.textContent = on ? "★ Saved" : "☆ Save";
+  });
   const msgs = document.getElementById("msgs");
   const add = (html) => {
     const atBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 80;

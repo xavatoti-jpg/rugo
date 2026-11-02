@@ -55,6 +55,48 @@ app.get("/api/live", (req, res) => {
   res.json(list);
 });
 
+// ---------- My Chats (favoritos de cada persona) ----------
+const bearer = (req) => (req.headers.authorization || "").replace(/^Bearer /, "");
+async function signedIn(req, res) {
+  if (!Auth.enabled) { res.status(503).json({ error: "Accounts are not enabled" }); return null; }
+  const me = await Auth.userFromToken(bearer(req)).catch(() => null);
+  if (!me) { res.status(401).json({ error: "Not signed in" }); return null; }
+  return me;
+}
+
+app.get("/api/favorites", async (req, res) => {
+  const me = await signedIn(req, res);
+  if (!me) return;
+  const { data, error } = await Auth.admin.from("favorites").select("room_id, title, genre, start_at, created_at")
+    .eq("user_id", me.user.id).order("created_at", { ascending: false });
+  if (error) return res.status(500).json({ error: "Could not load your chats" });
+  const now = new Map(Events.allEvents().map((e) => [e.id, e]));
+  res.json(data.map((f) => {
+    const e = now.get(f.room_id);
+    // Si el evento ya no existe, terminó
+    return e ? { ...withOnline(e), saved: true } : { id: f.room_id, title: f.title, genre: f.genre, start: f.start_at, state: "done", saved: true, online: 0 };
+  }));
+});
+
+app.post("/api/favorites/:roomId", async (req, res) => {
+  const me = await signedIn(req, res);
+  if (!me) return;
+  const e = Events.allEvents().find((x) => x.id === req.params.roomId);
+  if (!e) return res.status(404).json({ error: "Room not found" });
+  const { count } = await Auth.admin.from("favorites").select("*", { count: "exact", head: true }).eq("user_id", me.user.id);
+  if (count >= 100) return res.status(400).json({ error: "You can save up to 100 chats." });
+  const { error } = await Auth.admin.from("favorites").upsert({ user_id: me.user.id, room_id: e.id, title: e.title, genre: e.genre, start_at: e.start });
+  if (error) return res.status(500).json({ error: "Could not save" });
+  res.json({ saved: true });
+});
+
+app.delete("/api/favorites/:roomId", async (req, res) => {
+  const me = await signedIn(req, res);
+  if (!me) return;
+  await Auth.admin.from("favorites").delete().eq("user_id", me.user.id).eq("room_id", req.params.roomId);
+  res.json({ saved: false });
+});
+
 // Películas en cartelera por región: ?region=US | PR
 const Movies = require("./movies");
 app.get("/api/movies", (req, res) => {
