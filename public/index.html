@@ -137,7 +137,7 @@ function askName(done) {
     <button class="btn" id="go">Entrar al chat</button></div>`;
   const go = () => { const v = document.getElementById("nm").value.trim(); if (v) { localStorage.setItem("apodo", v); done(); } };
   document.getElementById("go").onclick = go;
-  document.getElementById("nm").onkeydown = (e) => e.key === "Enter" && go();
+  document.getElementById("nm").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
 }
 
 route();
