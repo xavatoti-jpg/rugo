@@ -29,8 +29,8 @@ async function userFromToken(token) {
 }
 
 function validUsername(name) {
-  if (!/^[A-Za-z0-9_]{3,20}$/.test(name)) return "Usa de 3 a 20 letras, números o _ (sin espacios).";
-  if (hasBadWord(name.replace(/_/g, " ")) || hasBadWord(name)) return "Ese nombre no está permitido.";
+  if (!/^[A-Za-z0-9_]{3,20}$/.test(name)) return "Use 3 to 20 letters, numbers or _ (no spaces).";
+  if (hasBadWord(name.replace(/_/g, " ")) || hasBadWord(name)) return "That username is not allowed.";
   return null;
 }
 
@@ -45,7 +45,7 @@ function routes(app) {
   // ¿Quién soy?
   app.get("/api/me", async (req, res) => {
     const me = await userFromToken(bearer(req));
-    if (!me) return res.status(401).json({ error: "No has iniciado sesión" });
+    if (!me) return res.status(401).json({ error: "Not signed in" });
     res.json({ id: me.user.id, username: me.profile?.username || null, avatar: me.profile?.avatar_url || me.user.user_metadata?.avatar_url || null });
   });
 
@@ -53,8 +53,8 @@ function routes(app) {
   app.post("/api/profile", require("express").json(), async (req, res) => {
     const token = bearer(req);
     const me = await userFromToken(token);
-    if (!me) return res.status(401).json({ error: "No has iniciado sesión" });
-    if (me.profile?.username) return res.status(400).json({ error: "Ya tienes un nombre de usuario." });
+    if (!me) return res.status(401).json({ error: "Not signed in" });
+    if (me.profile?.username) return res.status(400).json({ error: "You already have a username." });
 
     const username = String(req.body?.username || "").trim();
     const problem = validUsername(username);
@@ -67,7 +67,7 @@ function routes(app) {
     });
     if (error) {
       const taken = error.code === "23505";
-      return res.status(400).json({ error: taken ? "Ese nombre ya está tomado. Prueba otro." : "No se pudo guardar. Intenta de nuevo." });
+      return res.status(400).json({ error: taken ? "That username is taken. Try another one." : "Could not save. Please try again." });
     }
     cache.delete(token);
     res.json({ username });

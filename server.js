@@ -85,7 +85,7 @@ io.on("connection", (socket) => {
       // Sin cuentas configuradas: modo invitado con apodo
       const clean = String(name || "").trim().slice(0, 20);
       if (clean && !checkMessage(clean, { recent: [] }).blocked) socket.data.name = clean;
-      else if (clean) socket.emit("system", "Ese apodo no está permitido.");
+      else if (clean) socket.emit("system", "That nickname is not allowed.");
     }
 
     if (socket.data.room) {
@@ -103,7 +103,7 @@ io.on("connection", (socket) => {
   socket.on("message", (text) => {
     const room = socket.data.room;
     if (!room) return;
-    if (!socket.data.name) return socket.emit("system", "Inicia sesión para escribir en el chat.");
+    if (!socket.data.name) return socket.emit("system", "Sign in to chat.");
     const result = checkMessage(String(text || ""), socket.data);
     if (result.blocked) return socket.emit("system", result.reason);
 

@@ -40,27 +40,27 @@ function checkMessage(raw, state) {
 
   if (state.mutedUntil > now) {
     const s = Math.ceil((state.mutedUntil - now) / 1000);
-    return { blocked: true, reason: `Estás silenciado por ${s} segundos.` };
+    return { blocked: true, reason: `You are muted for ${s} seconds.` };
   }
   if (!text) return { blocked: true, reason: "" };
-  if (text.length > 300) return { blocked: true, reason: "Mensaje demasiado largo (máx. 300)." };
+  if (text.length > 300) return { blocked: true, reason: "Message too long (max 300)." };
 
   // Límite de velocidad: máx. 5 mensajes en 10 segundos
   state.recent = (state.recent || []).filter((m) => now - m.at < 10000);
-  if (state.recent.length >= 5) return strike(state, "Vas muy rápido. Espera un momento.");
+  if (state.recent.length >= 5) return strike(state, "Slow down! Wait a moment.");
 
   // Mensaje repetido
   if (state.recent.some((m) => m.text.toLowerCase() === text.toLowerCase())) {
-    return strike(state, "No repitas el mismo mensaje.");
+    return strike(state, "Don't repeat the same message.");
   }
   // Muchas MAYÚSCULAS o caracteres repetidos
   const letters = text.replace(/[^a-zA-ZÀ-ÿ]/g, "");
   if (letters.length > 12 && letters === letters.toUpperCase() && text.length > 20) {
-    return { blocked: true, reason: "Evita escribir todo en mayúsculas." };
+    return { blocked: true, reason: "Please don't write in all caps." };
   }
-  if (/(.)\1{9,}/.test(text)) return strike(state, "Mensaje parece spam.");
-  if (LINK_RE.test(text)) return strike(state, "No se permiten enlaces.");
-  if (hasBadWord(text)) return strike(state, "Tu mensaje contiene lenguaje no permitido.");
+  if (/(.)\1{9,}/.test(text)) return strike(state, "Message looks like spam.");
+  if (LINK_RE.test(text)) return strike(state, "Links are not allowed.");
+  if (hasBadWord(text)) return strike(state, "Your message contains language that is not allowed.");
 
   state.recent.push({ text, at: now });
   return { blocked: false, text };
@@ -72,7 +72,7 @@ function strike(state, reason) {
   if (state.strikes % 3 === 0) {
     const minutes = state.strikes / 3; // 1 min, 2 min, 3 min…
     state.mutedUntil = Date.now() + minutes * 60000;
-    return { blocked: true, reason: `${reason} Silenciado por ${minutes} minuto(s).` };
+    return { blocked: true, reason: `${reason} Muted for ${minutes} minute(s).` };
   }
   return { blocked: true, reason };
 }

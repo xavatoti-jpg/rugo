@@ -4,31 +4,31 @@ const path = require("path");
 
 // Categorías principales (lo primero que ve el usuario)
 const GENRES = [
-  { id: "deportes", name: "Deportes", emoji: "🏟️", color: "#ff6b35" },
-  { id: "peliculas", name: "Películas y TV", emoji: "🎬", color: "#e84393" },
+  { id: "sports", name: "Sports", emoji: "🏟️", color: "#ff6b35" },
+  { id: "movies", name: "Movies & TV", emoji: "🎬", color: "#e84393" },
   { id: "gaming", name: "Gaming", emoji: "🎮", color: "#6c5ce7" },
-  { id: "musica", name: "Música", emoji: "🎵", color: "#00b894" },
-  { id: "shows", name: "Premios y Shows", emoji: "🏆", color: "#fdcb6e" },
+  { id: "music", name: "Music", emoji: "🎵", color: "#00b894" },
+  { id: "shows", name: "Awards & Shows", emoji: "🏆", color: "#fdcb6e" },
 ];
 
 // Ligas de ESPN (API pública, sin clave). Se pueden añadir más.
 const LEAGUES = [
-  { sport: "basketball", league: "nba", label: "NBA", cat: "Baloncesto" },
-  { sport: "basketball", league: "wnba", label: "WNBA", cat: "Baloncesto" },
-  { sport: "basketball", league: "mens-college-basketball", label: "NCAA", cat: "Baloncesto" },
-  { sport: "football", league: "nfl", label: "NFL", cat: "Fútbol americano" },
-  { sport: "football", league: "college-football", label: "NCAA Football", cat: "Fútbol americano" },
-  { sport: "baseball", league: "mlb", label: "MLB", cat: "Béisbol" },
+  { sport: "basketball", league: "nba", label: "NBA", cat: "Basketball" },
+  { sport: "basketball", league: "wnba", label: "WNBA", cat: "Basketball" },
+  { sport: "basketball", league: "mens-college-basketball", label: "NCAA", cat: "Basketball" },
+  { sport: "football", league: "nfl", label: "NFL", cat: "Football" },
+  { sport: "football", league: "college-football", label: "NCAA Football", cat: "Football" },
+  { sport: "baseball", league: "mlb", label: "MLB", cat: "Baseball" },
   { sport: "hockey", league: "nhl", label: "NHL", cat: "Hockey" },
-  { sport: "soccer", league: "eng.1", label: "Premier League", cat: "Fútbol" },
-  { sport: "soccer", league: "esp.1", label: "LaLiga", cat: "Fútbol" },
-  { sport: "soccer", league: "ita.1", label: "Serie A", cat: "Fútbol" },
-  { sport: "soccer", league: "ger.1", label: "Bundesliga", cat: "Fútbol" },
-  { sport: "soccer", league: "fra.1", label: "Ligue 1", cat: "Fútbol" },
-  { sport: "soccer", league: "mex.1", label: "Liga MX", cat: "Fútbol" },
-  { sport: "soccer", league: "usa.1", label: "MLS", cat: "Fútbol" },
-  { sport: "soccer", league: "uefa.champions", label: "Champions League", cat: "Fútbol" },
-  { sport: "mma", league: "ufc", label: "UFC", cat: "Peleas" },
+  { sport: "soccer", league: "eng.1", label: "Premier League", cat: "Soccer" },
+  { sport: "soccer", league: "esp.1", label: "LaLiga", cat: "Soccer" },
+  { sport: "soccer", league: "ita.1", label: "Serie A", cat: "Soccer" },
+  { sport: "soccer", league: "ger.1", label: "Bundesliga", cat: "Soccer" },
+  { sport: "soccer", league: "fra.1", label: "Ligue 1", cat: "Soccer" },
+  { sport: "soccer", league: "mex.1", label: "Liga MX", cat: "Soccer" },
+  { sport: "soccer", league: "usa.1", label: "MLS", cat: "Soccer" },
+  { sport: "soccer", league: "uefa.champions", label: "Champions League", cat: "Soccer" },
+  { sport: "mma", league: "ufc", label: "UFC", cat: "MMA" },
 ];
 
 const DAYS_AHEAD = 7;
@@ -49,7 +49,7 @@ async function fetchLeagueDay(l, day) {
     const st = e.status?.type || {};
     return {
       id: `${l.league}-${e.id}`,
-      genre: "deportes",
+      genre: "sports",
       title: e.name || e.shortName,
       category: l.cat,
       league: l.label,
@@ -117,9 +117,9 @@ function generalRooms() {
   return GENRES.map((g) => ({
     id: `general-${g.id}`,
     genre: g.id,
-    title: `Charla general de ${g.name}`,
+    title: `${g.name} General Chat`,
     category: "General",
-    league: "Siempre abierta",
+    league: "Always open",
     start: new Date().toISOString(),
     state: "live",
     always: true,
@@ -129,12 +129,12 @@ function generalRooms() {
 function sampleEvents() {
   const at = (h) => new Date(Date.now() + h * HOUR).toISOString();
   return [
-    { id: "demo-1", title: "Boston Celtics at Los Angeles Lakers", category: "Baloncesto", league: "NBA", start: at(-0.5), state: "live", detail: "2do cuarto", score: "BOS 48 - 51 LAL" },
-    { id: "demo-2", title: "Real Madrid vs Barcelona", category: "Fútbol", league: "LaLiga", start: at(-1), state: "live", detail: "67'", score: "RMA 1 - 1 BAR" },
-    { id: "demo-3", title: "Miami Heat at New York Knicks", category: "Baloncesto", league: "NBA", start: at(3), state: "upcoming" },
-    { id: "demo-4", title: "Chiefs at Eagles", category: "Fútbol americano", league: "NFL", start: at(26), state: "upcoming" },
-    { id: "demo-5", title: "Yankees at Dodgers", category: "Béisbol", league: "MLB", start: at(50), state: "upcoming" },
-  ].map((e) => ({ genre: "deportes", ...e }));
+    { id: "demo-1", title: "Boston Celtics at Los Angeles Lakers", category: "Basketball", league: "NBA", start: at(-0.5), state: "live", detail: "2nd Quarter", score: "BOS 48 - 51 LAL" },
+    { id: "demo-2", title: "Real Madrid vs Barcelona", category: "Soccer", league: "LaLiga", start: at(-1), state: "live", detail: "67'", score: "RMA 1 - 1 BAR" },
+    { id: "demo-3", title: "Miami Heat at New York Knicks", category: "Basketball", league: "NBA", start: at(3), state: "upcoming" },
+    { id: "demo-4", title: "Chiefs at Eagles", category: "Football", league: "NFL", start: at(26), state: "upcoming" },
+    { id: "demo-5", title: "Yankees at Dodgers", category: "Baseball", league: "MLB", start: at(50), state: "upcoming" },
+  ].map((e) => ({ genre: "sports", ...e }));
 }
 
 function allEvents() {

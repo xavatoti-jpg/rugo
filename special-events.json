@@ -1,9 +1,9 @@
 [
-  { "id": "latin-grammys-2026", "genre": "musica", "title": "Latin Grammy 2026", "category": "Premios", "league": "Latin Grammy", "start": "2026-11-13T01:00:00Z", "hours": 4 },
-  { "id": "miss-universe-2026", "genre": "shows", "title": "Miss Universo 2026", "category": "Concursos", "league": "Miss Universe", "start": "2026-11-21T01:00:00Z", "hours": 3 },
-  { "id": "game-awards-2026", "genre": "gaming", "title": "The Game Awards 2026", "category": "Premios", "league": "The Game Awards", "start": "2026-12-11T00:30:00Z", "hours": 3 },
-  { "id": "golden-globes-2027", "genre": "peliculas", "title": "Golden Globes 2027", "category": "Premios", "league": "Golden Globes", "start": "2027-01-11T01:00:00Z", "hours": 3 },
-  { "id": "grammys-2027", "genre": "musica", "title": "Premios Grammy 2027", "category": "Premios", "league": "Grammy", "start": "2027-02-08T01:00:00Z", "hours": 4 },
-  { "id": "super-bowl-lxi", "genre": "deportes", "title": "Super Bowl LXI", "category": "Fútbol americano", "league": "NFL", "start": "2027-02-14T23:30:00Z", "hours": 4 },
-  { "id": "oscars-2027", "genre": "peliculas", "title": "Premios Oscar 2027", "category": "Premios", "league": "Oscar", "start": "2027-03-15T00:00:00Z", "hours": 4 }
+  {"id": "latin-grammys-2026", "genre": "music", "title": "Latin Grammy 2026", "category": "Awards", "league": "Latin Grammy", "start": "2026-11-13T01:00:00Z", "hours": 4},
+  {"id": "miss-universe-2026", "genre": "shows", "title": "Miss Universe 2026", "category": "Pageants", "league": "Miss Universe", "start": "2026-11-21T01:00:00Z", "hours": 3},
+  {"id": "game-awards-2026", "genre": "gaming", "title": "The Game Awards 2026", "category": "Awards", "league": "The Game Awards", "start": "2026-12-11T00:30:00Z", "hours": 3},
+  {"id": "golden-globes-2027", "genre": "movies", "title": "Golden Globes 2027", "category": "Awards", "league": "Golden Globes", "start": "2027-01-11T01:00:00Z", "hours": 3},
+  {"id": "grammys-2027", "genre": "music", "title": "Grammy Awards 2027", "category": "Awards", "league": "Grammy", "start": "2027-02-08T01:00:00Z", "hours": 4},
+  {"id": "super-bowl-lxi", "genre": "sports", "title": "Super Bowl LXI", "category": "Football", "league": "NFL", "start": "2027-02-14T23:30:00Z", "hours": 4},
+  {"id": "oscars-2027", "genre": "movies", "title": "Oscars 2027", "category": "Awards", "league": "Oscar", "start": "2027-03-15T00:00:00Z", "hours": 4}
 ]
