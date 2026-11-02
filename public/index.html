@@ -5,108 +5,223 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rugo · Chat en vivo de cada evento</title>
 <style>
-  :root { --bg:#0e0e12; --panel:#18181f; --line:#2a2a35; --text:#ececf1; --muted:#9a9aa8; --accent:#9b5cff; --live:#ff4757; }
+  :root { --bg:#0e0e12; --panel:#18181f; --panel2:#202029; --line:#2a2a35; --text:#ececf1; --muted:#9a9aa8; --accent:#9b5cff; --live:#ff4757; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-  header { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px; }
-  header a { color:var(--text); text-decoration:none; font-weight:800; font-size:20px; }
-  header a span { color:var(--accent); }
-  main { max-width:960px; margin:0 auto; padding:16px; }
-  input, button { font:inherit; }
-  .search { width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); }
-  .chips { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 18px; }
-  .chip { padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
-  .chip.on { background:var(--accent); border-color:var(--accent); color:#fff; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; cursor:pointer; text-decoration:none; color:inherit; display:block; }
-  .card:hover { border-color:var(--accent); }
-  .meta { font-size:13px; color:var(--muted); display:flex; justify-content:space-between; gap:8px; }
-  .title { font-weight:700; margin:8px 0; }
-  .live { color:var(--live); font-weight:700; }
-  .empty { color:var(--muted); text-align:center; padding:40px 0; }
+  a { color:inherit; text-decoration:none; }
+  button { font:inherit; color:inherit; }
+  header { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; position:sticky; top:0; background:var(--bg); z-index:5; }
+  .logo { font-weight:800; font-size:22px; }
+  .logo span { color:var(--accent); }
+  .back { font-size:22px; padding:0 6px 0 0; color:var(--muted); }
+  main { max-width:760px; margin:0 auto; padding:20px 16px 40px; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  h2 { font-size:15px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:28px 0 12px; display:flex; align-items:center; gap:8px; }
+  .sub { color:var(--muted); margin:0 0 20px; }
+
+  /* Categorías */
+  .genres { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  .genre { position:relative; border-radius:18px; padding:18px 16px; min-height:130px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden;
+           background:linear-gradient(140deg, var(--c) -40%, var(--panel) 75%); border:1px solid var(--line); transition:transform .15s; }
+  .genre:hover { transform:translateY(-2px); border-color:var(--c); }
+  .genre .emoji { font-size:38px; }
+  .genre .name { font-weight:800; font-size:18px; }
+  .genre .info { font-size:13px; color:var(--muted); margin-top:4px; }
+  .genre:first-child { grid-column:span 2; min-height:150px; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--live); animation:pulse 1.4s infinite; }
+  @keyframes pulse { 50% { opacity:.35; } }
+
+  /* En vivo */
+  .live-list { display:grid; gap:10px; }
+  .live-card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:14px; }
+  .live-card:hover { border-color:var(--accent); }
+  .live-card .body { flex:1; min-width:0; }
+  .live-card .top { font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center; }
+  .live-card .title { font-weight:700; margin:4px 0 2px; }
+  .live-card .score { font-size:14px; color:var(--text); opacity:.85; }
+  .live-card .go { background:var(--accent); color:#fff; border-radius:10px; padding:8px 12px; font-weight:700; font-size:14px; white-space:nowrap; }
+  .badge-live { color:var(--live); font-weight:800; display:inline-flex; align-items:center; gap:5px; }
+  .general { border-style:dashed; }
+  .empty { color:var(--muted); text-align:center; padding:28px 12px; background:var(--panel); border-radius:14px; }
+
+  /* Botón calendario */
+  .cal-btn { margin-top:28px; width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; cursor:pointer; text-align:left; }
+  .cal-btn:hover { border-color:var(--accent); }
+  .cal-btn small { display:block; color:var(--muted); margin-top:2px; }
+
+  /* Calendario */
+  .days { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none; }
+  .day { flex:0 0 auto; min-width:62px; text-align:center; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:8px 10px; cursor:pointer; }
+  .day b { display:block; font-size:18px; }
+  .day small { color:var(--muted); font-size:12px; }
+  .day.on { background:var(--accent); border-color:var(--accent); }
+  .day.on small { color:#fff; }
+  .day.none { opacity:.4; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin:14px 0 4px; }
+  .chip { padding:5px 11px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; font-size:14px; }
+  .chip.on { background:var(--text); color:var(--bg); border-color:var(--text); }
+  .row { display:flex; gap:14px; align-items:center; padding:12px 4px; border-bottom:1px solid var(--line); }
+  .row:hover .title { color:var(--accent); }
+  .row .time { width:70px; color:var(--muted); font-size:14px; flex-shrink:0; }
+  .row .title { font-weight:600; }
+  .row .lg { font-size:12px; color:var(--muted); }
 
   /* Sala */
   .room { display:flex; flex-direction:column; height:calc(100dvh - 59px); max-width:760px; margin:0 auto; }
   .room-head { padding:12px 16px; border-bottom:1px solid var(--line); }
   .room-head h1 { font-size:18px; margin:4px 0 0; }
+  .meta { font-size:13px; color:var(--muted); display:flex; justify-content:space-between; gap:8px; }
   .msgs { flex:1; overflow-y:auto; padding:12px 16px; }
   .msg { padding:3px 0; line-height:1.4; word-wrap:break-word; }
   .msg b { margin-right:6px; }
   .sys { color:#ffb347; font-size:14px; padding:4px 0; }
   form.send { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line); }
-  form.send input { flex:1; padding:12px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); min-width:0; }
-  form.send button, .btn { padding:12px 18px; border:0; border-radius:10px; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
+  input.field { flex:1; padding:12px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); min-width:0; font:inherit; width:100%; }
+  .btn { padding:12px 18px; border:0; border-radius:10px; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
   .quick { display:flex; gap:6px; padding:0 16px; flex-wrap:wrap; }
-  .quick button { background:var(--panel); border:1px solid var(--line); color:var(--text); border-radius:999px; padding:4px 10px; cursor:pointer; }
-  .namebox { max-width:360px; margin:60px auto; text-align:center; }
+  .quick button { background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:4px 10px; cursor:pointer; }
+  .namebox { max-width:360px; margin:60px auto; text-align:center; padding:0 16px; }
   .namebox input { margin:14px 0; }
 </style>
 </head>
 <body>
-<header><a href="#/">Rug<span>o</span> 🦁</a></header>
+<header id="hdr"></header>
 <div id="app"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const app = document.getElementById("app");
-let socket = null;
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const hdr = document.getElementById("hdr");
+let socket = null, genres = [];
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const colorFor = (name) => `hsl(${[...name].reduce((a,c)=>a+c.charCodeAt(0),0)*47%360} 80% 70%)`;
-const fmtTime = (iso) => new Date(iso).toLocaleString([], { weekday:"short", hour:"numeric", minute:"2-digit" });
-const isLive = (e) => /progress|half|quarter|period|inning|en vivo|live/i.test(e.status) ||
-  (Date.now() > new Date(e.start) && Date.now() - new Date(e.start) < 3*3600e3 && !/final|terminado/i.test(e.status));
+const hora = (iso) => new Date(iso).toLocaleTimeString("es", { hour:"numeric", minute:"2-digit" });
+const dayKey = (d) => { d = new Date(d); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+const api = async (u) => (await fetch(u)).json();
+
+function header(backTo) {
+  hdr.innerHTML = (backTo ? `<a class="back" href="${backTo}">←</a>` : "") + `<a class="logo" href="#/">Rug<span>o</span> 🦁</a>`;
+}
 
 function route() {
   if (socket) { socket.disconnect(); socket = null; }
-  const m = location.hash.match(/^#\/sala\/(.+)$/);
-  m ? showRoom(decodeURIComponent(m[1])) : showHome();
+  window.scrollTo(0, 0);
+  const h = location.hash;
+  let m;
+  if ((m = h.match(/^#\/sala\/(.+)$/))) return showRoom(decodeURIComponent(m[1]));
+  if ((m = h.match(/^#\/g\/([^/]+)\/calendario$/))) return showCalendar(m[1]);
+  if ((m = h.match(/^#\/g\/([^/]+)$/))) return showGenre(m[1]);
+  showHome();
 }
 window.addEventListener("hashchange", route);
 
-// ---------- Página principal ----------
-let filter = "Todos", query = "";
-async function showHome() {
-  app.innerHTML = `<main>
-    <input class="search" id="q" placeholder="Busca un juego, equipo o evento…" value="${esc(query)}">
-    <div class="chips" id="chips"></div>
-    <div class="grid" id="grid"><div class="empty">Cargando…</div></div></main>`;
-  const events = await (await fetch("/api/events")).json();
-  const cats = ["Todos", "En vivo", ...new Set(events.map((e) => e.category))];
+async function loadGenres() { genres = await api("/api/genres"); return genres; }
+const genreById = (id) => genres.find((g) => g.id === id);
 
-  const render = () => {
-    document.getElementById("chips").innerHTML = cats.map((c) =>
-      `<button class="chip ${c===filter?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
-    const list = events.filter((e) =>
-      (filter === "Todos" || (filter === "En vivo" ? isLive(e) : e.category === filter)) &&
-      (e.title + " " + e.league).toLowerCase().includes(query.toLowerCase()));
-    document.getElementById("grid").innerHTML = list.length ? list.map((e) => `
-      <a class="card" href="#/sala/${encodeURIComponent(e.id)}">
-        <div class="meta"><span>${esc(e.league)}</span>${isLive(e) ? '<span class="live">● EN VIVO</span>' : `<span>${fmtTime(e.start)}</span>`}</div>
-        <div class="title">${esc(e.title)}</div>
-        <div class="meta"><span>${esc(e.status)}</span><span>💬 ${e.online} en el chat</span></div>
-      </a>`).join("") : `<div class="empty">No hay eventos que coincidan.</div>`;
-  };
-  render();
-  document.getElementById("q").oninput = (ev) => { query = ev.target.value; render(); };
-  document.getElementById("chips").onclick = (ev) => { if (ev.target.dataset.c) { filter = ev.target.dataset.c; render(); } };
+// ---------- 1. Inicio: categorías ----------
+async function showHome() {
+  header();
+  app.innerHTML = `<main><h1>¿Qué estás viendo?</h1><p class="sub">Elige una categoría y comenta en vivo con todo el mundo.</p><div class="genres" id="g"></div></main>`;
+  await loadGenres();
+  document.getElementById("g").innerHTML = genres.map((g) => `
+    <a class="genre" href="#/g/${g.id}" style="--c:${g.color}">
+      <div class="emoji">${g.emoji}</div>
+      <div><div class="name">${esc(g.name)}</div>
+      <div class="info">${g.live ? `<span class="badge-live"><span class="dot"></span>${g.live} en vivo</span>` : "Nada en vivo ahora"}${g.online ? ` · 💬 ${g.online}` : ""}</div></div>
+    </a>`).join("");
 }
 
-// ---------- Sala de chat ----------
+// ---------- 2. Categoría: solo lo que está EN VIVO ----------
+async function showGenre(gid) {
+  header("#/");
+  if (!genres.length) await loadGenres();
+  const g = genreById(gid);
+  if (!g) return (location.hash = "#/");
+  app.innerHTML = `<main><h1>${g.emoji} ${esc(g.name)}</h1>
+    <h2><span class="dot"></span> En vivo ahora</h2><div class="live-list" id="live"></div>
+    <a class="cal-btn" href="#/g/${gid}/calendario"><div><b>📅 Calendario</b><small id="calInfo">Lo que viene en los próximos días</small></div><span>›</span></a>
+  </main>`;
+  const events = await api("/api/events?genre=" + gid);
+  const live = events.filter((e) => e.state === "live" && !e.always);
+  const general = events.find((e) => e.always);
+  const upcoming = events.filter((e) => e.state === "upcoming");
+
+  document.getElementById("live").innerHTML =
+    (live.length ? live.map(liveCard).join("") : `<div class="empty">No hay nada en vivo ahora mismo.<br>Mira el calendario para ver lo que viene 👇</div>`) +
+    (general ? liveCard(general) : "");
+  document.getElementById("calInfo").textContent = upcoming.length
+    ? `${upcoming.length} evento${upcoming.length > 1 ? "s" : ""} próximamente` : "No hay eventos programados todavía";
+}
+
+function liveCard(e) {
+  return `<a class="live-card ${e.always ? "general" : ""}" href="#/sala/${encodeURIComponent(e.id)}">
+    <div class="body">
+      <div class="top">${e.always ? "💬 Siempre abierta" : `<span class="badge-live"><span class="dot"></span>EN VIVO</span><span>${esc(e.league)}</span>`}${e.detail ? `<span>· ${esc(e.detail)}</span>` : ""}</div>
+      <div class="title">${esc(e.title)}</div>
+      ${e.score ? `<div class="score">${esc(e.score)}</div>` : ""}
+    </div>
+    <div class="go">${e.online ? `👥 ${e.online}` : "Entrar"}</div>
+  </a>`;
+}
+
+// ---------- 3. Calendario ----------
+let calDay = null, calCat = "Todos";
+async function showCalendar(gid) {
+  header("#/g/" + gid);
+  if (!genres.length) await loadGenres();
+  const g = genreById(gid);
+  if (!g) return (location.hash = "#/");
+  const events = (await api("/api/events?genre=" + gid)).filter((e) => e.state === "upcoming");
+
+  // Próximos 7 días + "Más adelante"
+  const days = [];
+  for (let i = 0; i < 8; i++) { const d = new Date(); d.setDate(d.getDate() + i); days.push(d); }
+  const weekEnd = new Date(days[7]); weekEnd.setHours(0, 0, 0, 0);
+  const tabs = [...days.slice(0, 7).map((d, i) => ({ key: dayKey(d),
+      top: i === 0 ? "Hoy" : i === 1 ? "Mañana" : d.toLocaleDateString("es", { weekday:"short" }), num: d.getDate() })),
+    { key: "later", top: "Más", num: "⋯" }];
+  const inTab = (e, key) => key === "later" ? new Date(e.start) >= weekEnd : dayKey(e.start) === key;
+  if (!calDay || !tabs.some((t) => t.key === calDay)) calDay = (tabs.find((t) => events.some((e) => inTab(e, t.key))) || tabs[0]).key;
+
+  const render = () => {
+    const ofDay = events.filter((e) => inTab(e, calDay));
+    const cats = ["Todos", ...new Set(ofDay.map((e) => e.category))];
+    if (!cats.includes(calCat)) calCat = "Todos";
+    const list = ofDay.filter((e) => calCat === "Todos" || e.category === calCat);
+    app.innerHTML = `<main><h1>📅 ${esc(g.name)}</h1><p class="sub">Toca un evento para entrar a su sala.</p>
+      <div class="days">${tabs.map((t) => `<div class="day ${t.key === calDay ? "on" : ""} ${events.some((e) => inTab(e, t.key)) ? "" : "none"}" data-k="${t.key}"><small>${t.top}</small><b>${t.num}</b></div>`).join("")}</div>
+      ${cats.length > 2 ? `<div class="chips">${cats.map((c) => `<button class="chip ${c === calCat ? "on" : ""}" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>` : ""}
+      <div>${list.length ? list.map((e) => `
+        <a class="row" href="#/sala/${encodeURIComponent(e.id)}">
+          <div class="time">${calDay === "later" ? new Date(e.start).toLocaleDateString("es", { day:"numeric", month:"short" }) : hora(e.start)}</div>
+          <div><div class="title">${esc(e.title)}</div><div class="lg">${esc(e.league)} · ${esc(e.category)}</div></div>
+        </a>`).join("") : `<div class="empty" style="margin-top:14px">No hay eventos este día.</div>`}</div></main>`;
+    app.querySelector(".days").onclick = (ev) => { const k = ev.target.closest(".day")?.dataset.k; if (k) { calDay = k; render(); } };
+    app.querySelector(".chips")?.addEventListener("click", (ev) => { if (ev.target.dataset.c) { calCat = ev.target.dataset.c; render(); } });
+  };
+  render();
+}
+
+// ---------- 4. Sala de chat ----------
 async function showRoom(id) {
   const res = await fetch("/api/events/" + encodeURIComponent(id));
-  if (!res.ok) { app.innerHTML = `<div class="empty">Esta sala no existe. <a href="#/">Volver</a></div>`; return; }
+  if (!res.ok) { header("#/"); app.innerHTML = `<div class="namebox">Esta sala ya no existe. <a href="#/" style="color:var(--accent)">Volver</a></div>`; return; }
   const ev = await res.json();
-  let name = localStorage.getItem("apodo");
+  header("#/g/" + ev.genre);
+  const name = localStorage.getItem("apodo");
   if (!name) return askName(() => showRoom(id));
 
+  const isLive = ev.state === "live" && !ev.always;
   app.innerHTML = `<div class="room">
     <div class="room-head">
-      <div class="meta"><span>${esc(ev.league)} · ${esc(ev.category)}</span><span id="online">👥 ${ev.online}</span></div>
+      <div class="meta"><span>${isLive ? `<span class="badge-live"><span class="dot"></span>EN VIVO</span> · ` : ""}${esc(ev.league)}${ev.state === "upcoming" ? ` · Empieza ${new Date(ev.start).toLocaleString("es", { weekday:"short", hour:"numeric", minute:"2-digit" })}` : ""}</span><span id="online">👥 ${ev.online}</span></div>
       <h1>${esc(ev.title)}</h1>
+      ${ev.score ? `<div class="meta" style="margin-top:4px"><span>${esc(ev.score)} ${ev.detail ? "· " + esc(ev.detail) : ""}</span></div>` : ""}
     </div>
     <div class="msgs" id="msgs"></div>
-    <div class="quick">${["🔥","🏀","😱","👏","😂","GOOOL ⚽","¡Vamos!"].map((q)=>`<button>${q}</button>`).join("")}</div>
-    <form class="send" id="send"><input id="text" maxlength="300" placeholder="Escribe como ${esc(name)}…" autocomplete="off"><button>Enviar</button></form>
+    <div class="quick">${["🔥","😱","👏","😂","💯","¡Vamos!"].map((q)=>`<button>${q}</button>`).join("")}</div>
+    <form class="send" id="send"><input class="field" id="text" maxlength="300" placeholder="Escribe como ${esc(name)}…" autocomplete="off"><button class="btn">Enviar</button></form>
   </div>`;
   const msgs = document.getElementById("msgs");
   const add = (html) => {
@@ -132,12 +247,13 @@ async function showRoom(id) {
 }
 
 function askName(done) {
-  app.innerHTML = `<div class="namebox"><h2>Elige un apodo</h2>
-    <input class="search" id="nm" maxlength="20" placeholder="Ej: ReyDelTriple">
-    <button class="btn" id="go">Entrar al chat</button></div>`;
+  app.innerHTML = `<div class="namebox"><h2 style="justify-content:center">Elige un apodo</h2>
+    <input class="field" id="nm" maxlength="20" placeholder="Ej: ReyDelTriple">
+    <button class="btn" id="go" style="width:100%">Entrar al chat</button></div>`;
   const go = () => { const v = document.getElementById("nm").value.trim(); if (v) { localStorage.setItem("apodo", v); done(); } };
-  document.getElementById("go").onclick = go;
+  document.getElementById("go").addEventListener("click", go);
   document.getElementById("nm").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+  document.getElementById("nm").focus();
 }
 
 route();

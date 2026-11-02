@@ -1,0 +1,161 @@
+// Eventos y categorías de Rugo
+const fs = require("fs");
+const path = require("path");
+
+// Categorías principales (lo primero que ve el usuario)
+const GENRES = [
+  { id: "deportes", name: "Deportes", emoji: "🏟️", color: "#ff6b35" },
+  { id: "peliculas", name: "Películas y TV", emoji: "🎬", color: "#e84393" },
+  { id: "gaming", name: "Gaming", emoji: "🎮", color: "#6c5ce7" },
+  { id: "musica", name: "Música", emoji: "🎵", color: "#00b894" },
+  { id: "shows", name: "Premios y Shows", emoji: "🏆", color: "#fdcb6e" },
+];
+
+// Ligas de ESPN (API pública, sin clave). Se pueden añadir más.
+const LEAGUES = [
+  { sport: "basketball", league: "nba", label: "NBA", cat: "Baloncesto" },
+  { sport: "basketball", league: "wnba", label: "WNBA", cat: "Baloncesto" },
+  { sport: "basketball", league: "mens-college-basketball", label: "NCAA", cat: "Baloncesto" },
+  { sport: "football", league: "nfl", label: "NFL", cat: "Fútbol americano" },
+  { sport: "football", league: "college-football", label: "NCAA Football", cat: "Fútbol americano" },
+  { sport: "baseball", league: "mlb", label: "MLB", cat: "Béisbol" },
+  { sport: "hockey", league: "nhl", label: "NHL", cat: "Hockey" },
+  { sport: "soccer", league: "eng.1", label: "Premier League", cat: "Fútbol" },
+  { sport: "soccer", league: "esp.1", label: "LaLiga", cat: "Fútbol" },
+  { sport: "soccer", league: "ita.1", label: "Serie A", cat: "Fútbol" },
+  { sport: "soccer", league: "ger.1", label: "Bundesliga", cat: "Fútbol" },
+  { sport: "soccer", league: "fra.1", label: "Ligue 1", cat: "Fútbol" },
+  { sport: "soccer", league: "mex.1", label: "Liga MX", cat: "Fútbol" },
+  { sport: "soccer", league: "usa.1", label: "MLS", cat: "Fútbol" },
+  { sport: "soccer", league: "uefa.champions", label: "Champions League", cat: "Fútbol" },
+  { sport: "mma", league: "ufc", label: "UFC", cat: "Peleas" },
+];
+
+const DAYS_AHEAD = 7;
+const HOUR = 3600e3;
+
+// Datos por día: { "20261102": [eventos] }
+let sportsByDay = {};
+let usingSamples = false;
+
+const ymd = (d) => d.toISOString().slice(0, 10).replace(/-/g, "");
+
+async function fetchLeagueDay(l, day) {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/${l.sport}/${l.league}/scoreboard?dates=${day}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) throw new Error(res.status);
+  const data = await res.json();
+  return (data.events || []).map((e) => {
+    const st = e.status?.type || {};
+    return {
+      id: `${l.league}-${e.id}`,
+      genre: "deportes",
+      title: e.name || e.shortName,
+      category: l.cat,
+      league: l.label,
+      start: e.date,
+      state: st.state === "in" ? "live" : st.state === "post" ? "done" : "upcoming",
+      detail: st.shortDetail || "",
+      score: scoreOf(e),
+    };
+  });
+}
+
+function scoreOf(e) {
+  const c = e.competitions?.[0]?.competitors;
+  if (!c || c.length !== 2 || e.status?.type?.state === "pre") return "";
+  const away = c.find((x) => x.homeAway === "away") || c[1];
+  const home = c.find((x) => x.homeAway === "home") || c[0];
+  return `${away.team?.abbreviation} ${away.score} - ${home.score} ${home.team?.abbreviation}`;
+}
+
+async function refreshDays(days) {
+  let ok = 0;
+  for (const day of days) {
+    const results = await Promise.allSettled(LEAGUES.map((l) => fetchLeagueDay(l, day)));
+    ok += results.filter((r) => r.status === "fulfilled").length;
+    const list = results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+    if (results.some((r) => r.status === "fulfilled")) sportsByDay[day] = list;
+  }
+  return ok;
+}
+
+// Hoy y ayer (partidos de la noche) se actualizan seguido para saber qué está en vivo
+async function refreshLive() {
+  const now = new Date();
+  const ok = await refreshDays([ymd(new Date(now - 86400e3)), ymd(now)]);
+  usingSamples = ok === 0;
+  console.log(`En vivo actualizado (${ok} respuestas)${usingSamples ? " — usando ejemplos" : ""}`);
+}
+
+// El calendario (próximos 7 días) se actualiza con menos frecuencia
+async function refreshCalendar() {
+  const days = [];
+  for (let i = 1; i <= DAYS_AHEAD; i++) days.push(ymd(new Date(Date.now() + i * 86400e3)));
+  await refreshDays(days);
+  // Borrar días viejos
+  const keep = new Set([ymd(new Date(Date.now() - 86400e3)), ymd(new Date()), ...days]);
+  for (const d of Object.keys(sportsByDay)) if (!keep.has(d)) delete sportsByDay[d];
+}
+
+// Eventos especiales (Oscars, Grammys, Miss Universo…) desde un archivo
+function specialEvents() {
+  let list = [];
+  try {
+    list = JSON.parse(fs.readFileSync(path.join(__dirname, "special-events.json"), "utf8"));
+  } catch {}
+  const now = Date.now();
+  return list.map((e) => {
+    const start = new Date(e.start).getTime();
+    const end = start + (e.hours || 4) * HOUR;
+    return { ...e, special: true, state: now >= start && now < end ? "live" : now >= end ? "done" : "upcoming" };
+  });
+}
+
+// Salas generales: siempre abiertas, una por categoría
+function generalRooms() {
+  return GENRES.map((g) => ({
+    id: `general-${g.id}`,
+    genre: g.id,
+    title: `Charla general de ${g.name}`,
+    category: "General",
+    league: "Siempre abierta",
+    start: new Date().toISOString(),
+    state: "live",
+    always: true,
+  }));
+}
+
+function sampleEvents() {
+  const at = (h) => new Date(Date.now() + h * HOUR).toISOString();
+  return [
+    { id: "demo-1", title: "Boston Celtics at Los Angeles Lakers", category: "Baloncesto", league: "NBA", start: at(-0.5), state: "live", detail: "2do cuarto", score: "BOS 48 - 51 LAL" },
+    { id: "demo-2", title: "Real Madrid vs Barcelona", category: "Fútbol", league: "LaLiga", start: at(-1), state: "live", detail: "67'", score: "RMA 1 - 1 BAR" },
+    { id: "demo-3", title: "Miami Heat at New York Knicks", category: "Baloncesto", league: "NBA", start: at(3), state: "upcoming" },
+    { id: "demo-4", title: "Chiefs at Eagles", category: "Fútbol americano", league: "NFL", start: at(26), state: "upcoming" },
+    { id: "demo-5", title: "Yankees at Dodgers", category: "Béisbol", league: "MLB", start: at(50), state: "upcoming" },
+  ].map((e) => ({ genre: "deportes", ...e }));
+}
+
+function allEvents() {
+  const sports = usingSamples ? sampleEvents() : dedupe(Object.values(sportsByDay).flat());
+  const limit = Date.now() + (DAYS_AHEAD + 1) * 86400e3;
+  return [...generalRooms(), ...specialEvents(), ...sports]
+    // Los especiales (Oscars, etc.) salen aunque falten semanas; los partidos, solo 7 días
+    .filter((e) => e.state !== "done" && (e.special || new Date(e.start).getTime() < limit))
+    .sort((a, b) => new Date(a.start) - new Date(b.start));
+}
+
+function dedupe(list) {
+  const seen = new Map();
+  for (const e of list) seen.set(e.id, e);
+  return [...seen.values()];
+}
+
+function start() {
+  refreshLive().then(refreshCalendar);
+  setInterval(refreshLive, 2 * 60 * 1000); // cada 2 minutos
+  setInterval(refreshCalendar, 60 * 60 * 1000); // cada hora
+}
+
+module.exports = { GENRES, allEvents, start };
