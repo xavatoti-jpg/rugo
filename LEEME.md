@@ -12,3 +12,12 @@ Chat en vivo para cada evento: partidos de todas las ligas del día (automático
 - `moderation.js` – filtro de insultos, spam, enlaces y límite de velocidad
 - `special-events.json` – eventos que no son deportes (añade los que quieras)
 - `public/index.html` – la página web
+
+## Cuentas (Google y Facebook)
+Se activan al poner estas variables en Render → Environment:
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (¡secreta! nunca la compartas)
+
+La tabla de usuarios se crea pegando `supabase/schema.sql` en Supabase → SQL Editor.
+Sin esas variables, Rugo funciona en modo invitado (apodo sin cuenta).

@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const { Server } = require("socket.io");
 const { checkMessage } = require("./moderation");
+const Auth = require("./auth");
 
 const app = express();
 const server = http.createServer(app);
@@ -12,6 +13,9 @@ const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "public")));
+// Librería de Supabase para el navegador (servida desde nuestro propio servidor)
+app.use("/vendor", express.static(path.join(__dirname, "node_modules/@supabase/supabase-js/dist/umd")));
+Auth.routes(app);
 
 // ---------------------------------------------------------------
 // 1. EVENTOS (ver events.js): salas automáticas para todos los eventos
@@ -40,6 +44,15 @@ app.get("/api/genres", (req, res) => {
   }));
 });
 
+// Inicio: todo lo que está en vivo, ordenado por popularidad (más gente primero)
+app.get("/api/live", (req, res) => {
+  const list = Events.allEvents()
+    .map(withOnline)
+    .filter((e) => (e.state === "live" && !e.always) || (e.always && e.online > 0))
+    .sort((a, b) => b.online - a.online || new Date(b.start) - new Date(a.start));
+  res.json(list);
+});
+
 // Eventos de una categoría: ?genre=deportes
 app.get("/api/events", (req, res) => {
   const list = Events.allEvents().filter((e) => !req.query.genre || e.genre === req.query.genre);
@@ -60,16 +73,29 @@ io.on("connection", (socket) => {
   socket.data.strikes = 0;
   socket.data.mutedUntil = 0;
 
-  socket.on("join", ({ roomId, name }) => {
+  socket.on("join", async ({ roomId, name, token }) => {
     if (!Events.allEvents().some((e) => e.id === roomId)) return;
-    const clean = String(name || "").trim().slice(0, 20);
-    if (!clean || checkMessage(clean, socket.data).blocked) {
-      return socket.emit("system", "Ese apodo no está permitido.");
+    socket.data.name = null;
+
+    if (Auth.enabled) {
+      // Con cuentas: todos pueden leer; para escribir hay que iniciar sesión
+      const me = await Auth.userFromToken(token).catch(() => null);
+      if (me?.profile?.username) socket.data.name = me.profile.username;
+    } else {
+      // Sin cuentas configuradas: modo invitado con apodo
+      const clean = String(name || "").trim().slice(0, 20);
+      if (clean && !checkMessage(clean, { recent: [] }).blocked) socket.data.name = clean;
+      else if (clean) socket.emit("system", "Ese apodo no está permitido.");
     }
-    if (socket.data.room) socket.leave(socket.data.room);
+
+    if (socket.data.room) {
+      const old = socket.data.room;
+      socket.leave(old);
+      io.to(old).emit("online", onlineCount(old));
+    }
     socket.data.room = roomId;
-    socket.data.name = clean;
     socket.join(roomId);
+    socket.emit("joined", { canWrite: Boolean(socket.data.name), name: socket.data.name });
     socket.emit("history", history.get(roomId) || []);
     io.to(roomId).emit("online", onlineCount(roomId));
   });
@@ -77,6 +103,7 @@ io.on("connection", (socket) => {
   socket.on("message", (text) => {
     const room = socket.data.room;
     if (!room) return;
+    if (!socket.data.name) return socket.emit("system", "Inicia sesión para escribir en el chat.");
     const result = checkMessage(String(text || ""), socket.data);
     if (result.blocked) return socket.emit("system", result.reason);
 
