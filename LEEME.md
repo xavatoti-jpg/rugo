@@ -1,4 +1,4 @@
-# EnVivo Chat (prototipo)
+# Rugo (prototipo)
 
 Chat en vivo para cada evento: partidos de todas las ligas del día (automático, vía ESPN) y eventos especiales (Oscars, Grammys, Miss Universo…).
 
