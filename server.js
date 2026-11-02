@@ -38,9 +38,10 @@ const withOnline = (e) => ({ ...e, online: onlineCount(e.id) });
 app.get("/api/genres", (req, res) => {
   const events = Events.allEvents();
   res.json(Events.GENRES.map((g) => {
-    const live = events.filter((e) => e.genre === g.id && e.state === "live" && !e.always);
+    const live = events.filter((e) => e.genre === g.id && e.state === "live" && !e.always && !e.ongoing);
+    const showing = events.filter((e) => e.genre === g.id && e.ongoing).length;
     const online = events.filter((e) => e.genre === g.id).reduce((n, e) => n + onlineCount(e.id), 0);
-    return { ...g, live: live.length, online };
+    return { ...g, live: live.length, showing, online };
   }));
 });
 
@@ -48,9 +49,19 @@ app.get("/api/genres", (req, res) => {
 app.get("/api/live", (req, res) => {
   const list = Events.allEvents()
     .map(withOnline)
-    .filter((e) => (e.state === "live" && !e.always) || (e.always && e.online > 0))
+    // Salas fijas (charla general, películas) solo salen si hay gente adentro
+    .filter((e) => (e.state === "live" && !e.always && !e.ongoing) || ((e.always || e.ongoing) && e.online > 0))
     .sort((a, b) => b.online - a.online || new Date(b.start) - new Date(a.start));
   res.json(list);
+});
+
+// Películas en cartelera por región: ?region=US | PR
+const Movies = require("./movies");
+app.get("/api/movies", (req, res) => {
+  const region = Movies.REGIONS[req.query.region] ? req.query.region : "US";
+  const list = Movies.inRegion(region).map((m) => ({ ...m, online: onlineCount(m.id) }))
+    .sort((a, b) => b.online - a.online || (b.releaseDate || "").localeCompare(a.releaseDate || ""));
+  res.json({ region, regions: Movies.REGIONS, ...Movies.status(), movies: list });
 });
 
 // Eventos de una categoría: ?genre=deportes

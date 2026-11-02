@@ -21,3 +21,7 @@ Se activan al poner estas variables en Render → Environment:
 
 La tabla de usuarios se crea pegando `supabase/schema.sql` en Supabase → SQL Editor.
 Sin esas variables, Rugo funciona en modo invitado (apodo sin cuenta).
+
+## Movies in theaters (TMDB)
+Add `TMDB_TOKEN` (API Read Access Token from themoviedb.org) in Render → Environment.
+Listings for United States and Puerto Rico refresh every 6 hours. `TMDB_MOCK=1` uses sample movies for local testing.

@@ -1,10 +1,12 @@
 // Eventos y categorías de Rugo
 const fs = require("fs");
+const Movies = require("./movies");
 const path = require("path");
 
 // Categorías principales (lo primero que ve el usuario)
 const GENRES = [
   { id: "sports", name: "Sports", emoji: "🏟️", color: "#ff6b35" },
+  { id: "theaters", name: "In Theaters", emoji: "🍿", color: "#e17055" },
   { id: "movies", name: "Movies & TV", emoji: "🎬", color: "#e84393" },
   { id: "gaming", name: "Gaming", emoji: "🎮", color: "#6c5ce7" },
   { id: "music", name: "Music", emoji: "🎵", color: "#00b894" },
@@ -140,7 +142,7 @@ function sampleEvents() {
 function allEvents() {
   const sports = usingSamples ? sampleEvents() : dedupe(Object.values(sportsByDay).flat());
   const limit = Date.now() + (DAYS_AHEAD + 1) * 86400e3;
-  return [...generalRooms(), ...specialEvents(), ...sports]
+  return [...generalRooms(), ...specialEvents(), ...Movies.asEvents(), ...sports]
     // Los especiales (Oscars, etc.) salen aunque falten semanas; los partidos, solo 7 días
     .filter((e) => e.state !== "done" && (e.special || new Date(e.start).getTime() < limit))
     .sort((a, b) => new Date(a.start) - new Date(b.start));
@@ -153,6 +155,7 @@ function dedupe(list) {
 }
 
 function start() {
+  Movies.start();
   refreshLive().then(refreshCalendar);
   setInterval(refreshLive, 2 * 60 * 1000); // cada 2 minutos
   setInterval(refreshCalendar, 60 * 60 * 1000); // cada hora
