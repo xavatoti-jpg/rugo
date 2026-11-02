@@ -69,7 +69,7 @@ app.get("/api/favorites", async (req, res) => {
   if (!me) return;
   const { data, error } = await Auth.admin.from("favorites").select("room_id, title, genre, start_at, created_at")
     .eq("user_id", me.user.id).order("created_at", { ascending: false });
-  if (error) return res.status(500).json({ error: "Could not load your chats" });
+  if (error) { console.error("Favorites load failed:", error.code, error.message); return res.status(500).json({ error: "Could not load your chats" }); }
   const now = new Map(Events.allEvents().map((e) => [e.id, e]));
   res.json(data.map((f) => {
     const e = now.get(f.room_id);
@@ -86,7 +86,11 @@ app.post("/api/favorites/:roomId", async (req, res) => {
   const { count } = await Auth.admin.from("favorites").select("*", { count: "exact", head: true }).eq("user_id", me.user.id);
   if (count >= 100) return res.status(400).json({ error: "You can save up to 100 chats." });
   const { error } = await Auth.admin.from("favorites").upsert({ user_id: me.user.id, room_id: e.id, title: e.title, genre: e.genre, start_at: e.start });
-  if (error) return res.status(500).json({ error: "Could not save" });
+  if (error) {
+    console.error("Favorites save failed:", error.code, error.message);
+    const missing = error.code === "42P01" || error.code === "PGRST205" || /does not exist|could not find the table/i.test(error.message || "");
+    return res.status(500).json({ error: missing ? "Could not save (favorites table is missing in the database)" : "Could not save" });
+  }
   res.json({ saved: true });
 });
 
@@ -133,7 +137,10 @@ io.on("connection", (socket) => {
     if (Auth.enabled) {
       // Con cuentas: todos pueden leer; para escribir hay que iniciar sesión
       const me = await Auth.userFromToken(token).catch(() => null);
-      if (me?.profile?.username) socket.data.name = me.profile.username;
+      if (me?.profile?.username) {
+        socket.data.name = me.profile.username;
+        socket.data.avatar = me.profile.avatar_url || me.user.user_metadata?.avatar_url || null;
+      }
     } else {
       // Sin cuentas configuradas: modo invitado con apodo
       const clean = String(name || "").trim().slice(0, 20);
@@ -163,6 +170,7 @@ io.on("connection", (socket) => {
     const msg = {
       id: Date.now() + Math.random().toString(36).slice(2, 6),
       name: socket.data.name,
+      avatar: socket.data.avatar || null,
       text: result.text,
       at: Date.now(),
     };
@@ -171,6 +179,19 @@ io.on("connection", (socket) => {
     if (list.length > 100) list.shift();
     history.set(room, list);
     io.to(room).emit("message", msg);
+  });
+
+  // Reacciones flotantes (no se guardan como mensajes)
+  const REACTIONS = ["🔥", "😱", "👏", "😂", "💯", "❤️", "🎉", "😡", "🐐", "🏀", "⚽", "🍿"];
+  socket.data.reacts = [];
+  socket.on("react", (emoji) => {
+    const room = socket.data.room;
+    if (!room || !REACTIONS.includes(emoji)) return;
+    const now = Date.now();
+    socket.data.reacts = socket.data.reacts.filter((t) => now - t < 2000);
+    if (socket.data.reacts.length >= 8) return; // máx. 8 cada 2 segundos
+    socket.data.reacts.push(now);
+    io.to(room).emit("react", emoji);
   });
 
   socket.on("disconnecting", () => {

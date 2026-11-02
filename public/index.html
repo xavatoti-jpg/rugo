@@ -110,19 +110,83 @@
 
   /* Sala */
   .room { display:flex; flex-direction:column; height:calc(100dvh - var(--hdr, 55px)); max-width:760px; margin:0 auto; }
-  .room-head { padding:12px 16px; border-bottom:1px solid var(--line); }
-  .room-head h1 { font-size:18px; margin:4px 0 0; }
-  .meta { font-size:13px; color:var(--muted); display:flex; justify-content:space-between; gap:8px; }
-  .msgs { flex:1; overflow-y:auto; padding:12px 16px; }
-  .msg { padding:3px 0; line-height:1.4; word-wrap:break-word; }
-  .msg b { margin-right:6px; }
-  .sys { color:#ffb347; font-size:14px; padding:4px 0; }
-  form.send, .need-login { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line); }
-  .need-login { justify-content:center; }
+  .room-head { padding:12px 16px 14px; border-bottom:1px solid var(--line); background:linear-gradient(180deg, color-mix(in srgb, var(--c) 18%, transparent), transparent); }
+  .rh-top { display:flex; align-items:center; gap:8px; }
+  .rh-badges { display:flex; gap:6px; flex:1; min-width:0; overflow:hidden; }
+  .rh-actions { display:flex; gap:8px; align-items:center; }
+  .icon-btn { width:32px; height:32px; border-radius:50%; display:grid; place-items:center; background:var(--panel); border:1px solid var(--line); flex-shrink:0; }
+  .icon-btn:hover { border-color:var(--muted); }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:var(--panel); border:1px solid var(--line); font-size:12px; font-weight:700; white-space:nowrap; }
+  .pill.live { color:var(--live); border-color:#ff475755; background:#ff47571a; }
+  .pill.muted { color:var(--muted); font-weight:600; overflow:hidden; text-overflow:ellipsis; }
+  .pill.viewers { font-variant-numeric:tabular-nums; }
+  .dot.green { background:#2ecc71; }
+  .room-head h1 { font-size:20px; margin:10px 0 0; line-height:1.25; }
+  .scoreboard { display:inline-flex; gap:10px; align-items:center; margin-top:8px; padding:6px 12px; border-radius:10px; background:#0008; border:1px solid var(--line); font-size:14px; }
+  .scoreboard b { letter-spacing:.03em; }
+  .scoreboard span { color:var(--muted); font-size:13px; }
+
+  .chat-area { position:relative; flex:1; min-height:0; display:flex; }
+  .msgs { flex:1; overflow-y:auto; padding:10px 12px 14px; scroll-behavior:smooth; overscroll-behavior:contain; }
+  .msg { display:flex; gap:10px; padding:6px 6px 2px; border-radius:12px; animation:msgIn .22s ease-out; }
+  .msg.grouped { padding-top:0; }
+  .msg:hover { background:#ffffff06; }
+  .msg.mine .bubble .txt { color:#fff; }
+  .msg.mine { background:linear-gradient(90deg, #9b5cff14, transparent 70%); }
+  .msg.mention { background:linear-gradient(90deg, #fdcb6e22, transparent 80%); box-shadow:inset 3px 0 0 #fdcb6e; }
+  @keyframes msgIn { from { opacity:0; transform:translateY(6px); } }
+  .av, .av-space { width:32px; height:32px; border-radius:50%; flex-shrink:0; }
+  .av { display:grid; place-items:center; font-weight:800; font-size:14px; background-size:cover; background-position:center; }
+  .av-space { height:0; }
+  .bubble { min-width:0; flex:1; }
+  .who { display:flex; align-items:baseline; gap:8px; }
+  .who b { font-size:14px; }
+  .who time { font-size:11px; color:var(--muted); }
+  .txt { line-height:1.45; word-wrap:break-word; overflow-wrap:anywhere; color:#dcdce4; }
+  .txt .at { color:var(--accent); font-weight:700; }
+  .sys { margin:8px auto; width:fit-content; max-width:90%; color:#ffb347; background:#ffb3471a; border:1px solid #ffb34740; font-size:13px; padding:6px 12px; border-radius:999px; text-align:center; animation:msgIn .2s; }
+  .first { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:var(--muted); text-align:center; }
+  .first .big { font-size:44px; margin-bottom:6px; animation:bob 2.4s ease-in-out infinite; }
+  .first b { color:var(--text); font-size:17px; }
+  @keyframes bob { 50% { transform:translateY(-6px); } }
+  .new-pill { position:absolute; left:50%; bottom:12px; transform:translate(-50%, 20px); opacity:0; pointer-events:none; background:var(--accent); color:#fff; border:0; border-radius:999px; padding:7px 14px; font-weight:700; font-size:13px; box-shadow:0 6px 20px #0008; transition:.2s; cursor:pointer; }
+  .new-pill.show { opacity:1; transform:translate(-50%, 0); pointer-events:auto; }
+  .floats { position:absolute; right:0; bottom:0; width:120px; height:70%; pointer-events:none; overflow:hidden; }
+  .float { position:absolute; bottom:-40px; font-size:30px; animation:floatUp 2.6s ease-out forwards; filter:drop-shadow(0 2px 6px #0008); }
+  @keyframes floatUp {
+    0% { transform:translate(0,0) scale(.6); opacity:0; }
+    12% { opacity:1; transform:translate(0,-30px) scale(1.15); }
+    100% { transform:translate(var(--drift), -420px) scale(.9); opacity:0; }
+  }
+
+  .composer { border-top:1px solid var(--line); background:linear-gradient(0deg, var(--panel) 0%, var(--bg) 100%); padding:8px 12px calc(10px + env(safe-area-inset-bottom)); position:relative; }
+  .react-bar { display:flex; gap:6px; overflow-x:auto; padding:2px 0 8px; scrollbar-width:none; }
+  .react-bar::-webkit-scrollbar { display:none; }
+  .react { flex:0 0 auto; width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:var(--panel2); font-size:19px; cursor:pointer; transition:transform .12s, border-color .12s; }
+  .react:hover { transform:translateY(-2px) scale(1.08); border-color:var(--accent); }
+  .react.pop { animation:pop .35s; }
+  @keyframes pop { 40% { transform:scale(1.35); } }
+  form.send { display:flex; gap:8px; align-items:center; }
+  .input-wrap { flex:1; display:flex; align-items:center; gap:4px; background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:4px 12px 4px 4px; transition:border-color .15s, box-shadow .15s; min-width:0; }
+  .input-wrap:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px #9b5cff2e; }
+  .input-wrap input { flex:1; min-width:0; background:none; border:0; outline:0; color:var(--text); font:inherit; padding:9px 4px; }
+  .emoji-toggle { width:36px; height:36px; border-radius:50%; border:0; background:none; font-size:20px; cursor:pointer; flex-shrink:0; }
+  .emoji-toggle:hover { background:#ffffff10; }
+  .count { font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .count.low { color:var(--live); font-weight:700; }
+  .send-btn { width:44px; height:44px; border-radius:50%; border:0; background:var(--accent); color:#fff; display:grid; place-items:center; cursor:pointer; flex-shrink:0; transition:transform .12s, opacity .15s; box-shadow:0 4px 14px #9b5cff55; }
+  .send-btn svg { width:20px; height:20px; margin-left:2px; }
+  .send-btn:hover:not(:disabled) { transform:scale(1.06); }
+  .send-btn:disabled { opacity:.35; box-shadow:none; cursor:default; }
+  .picker { display:none; grid-template-columns:repeat(8, 1fr); gap:2px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:8px; margin-bottom:8px; box-shadow:0 10px 30px #0009; }
+  .picker.open { display:grid; animation:msgIn .15s; }
+  .picker button { background:none; border:0; font-size:22px; padding:6px 0; border-radius:8px; cursor:pointer; }
+  .picker button:hover { background:#ffffff12; }
+  .join-card { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:10px 12px calc(10px + env(safe-area-inset-bottom)); padding:14px 16px; border-radius:16px; border:1px solid #9b5cff55; background:linear-gradient(120deg, #9b5cff26, var(--panel)); }
+  .join-card b { display:block; }
+  .join-card span { font-size:13px; color:var(--muted); }
   input.field { flex:1; padding:12px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); min-width:0; font:inherit; width:100%; }
   .btn { padding:12px 18px; border:0; border-radius:10px; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
-  .quick { display:flex; gap:6px; padding:0 16px; flex-wrap:wrap; }
-  .quick button { background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:4px 10px; cursor:pointer; }
   .namebox { max-width:380px; margin:50px auto; text-align:center; padding:0 16px; }
   .namebox input { margin:14px 0 8px; }
   .err { color:#ff7675; font-size:14px; min-height:20px; margin-bottom:8px; }
@@ -485,6 +549,10 @@ async function showCalendar(gid) {
 }
 
 // ---------- Sala de chat ----------
+const REACTIONS = ["🔥", "😱", "👏", "😂", "💯", "❤️", "🎉", "😡", "🐐"];
+const PICKER = ["😀","😂","🤣","😍","😎","🤯","😱","😭","😡","🥶","🤔","🙌","👏","🔥","💯","❤️","💔","🎉","🐐","👑","🏆","🏀","⚽","🏈","⚾","🥊","🎬","🍿","🎮","🎵","👀","💪"];
+const timeOf = (t) => new Date(t).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" });
+
 async function showRoom(id) {
   header("");
   const res = await fetch("/api/events/" + encodeURIComponent(id));
@@ -493,56 +561,153 @@ async function showRoom(id) {
   // Sin cuentas activadas: modo invitado con apodo
   const guestName = !cfg.auth ? localStorage.getItem("apodo") : null;
   if (!cfg.auth && !guestName) return askName(() => showRoom(id));
+  if (!genres.length) await loadGenres();
+  const g = genreById(ev.genre);
 
   const isLive = ev.state === "live" && !ev.always && !ev.ongoing;
-  app.innerHTML = `<div class="room">
+  const when = ev.state === "upcoming" ? (ev.allDay
+    ? `Opens ${new Date(ev.start).toLocaleDateString("en-US", { month:"short", day:"numeric", timeZone:"UTC" })}`
+    : `Starts ${new Date(ev.start).toLocaleString("en-US", { weekday:"short", hour:"numeric", minute:"2-digit" })}`) : "";
+  const badge = isLive ? `<span class="pill live"><span class="dot"></span>LIVE</span>`
+    : ev.ongoing ? `<span class="pill">🍿 Now playing</span>` : ev.always ? `<span class="pill">💬 Always open</span>`
+    : when ? `<span class="pill">📅 ${esc(when)}</span>` : "";
+
+  app.innerHTML = `<div class="room" style="--c:${g?.color || "#9b5cff"}">
     <div class="room-head">
-      <div class="meta"><span><a href="javascript:history.back()" style="margin-right:6px">←</a>${ev.ongoing ? "🍿 " : isLive ? `<span class="badge-live"><span class="dot"></span>LIVE</span> · ` : ""}${esc(ev.league)}${ev.state === "upcoming" ? (ev.allDay ? ` · ${new Date(ev.start).toLocaleDateString("en-US", { month:"short", day:"numeric", timeZone:"UTC" })}` : ` · Starts ${new Date(ev.start).toLocaleString("en-US", { weekday:"short", hour:"numeric", minute:"2-digit" })}`) : ""}</span><span style="display:flex;gap:10px;align-items:center">${cfg.auth ? `<button class="save-btn ${favs.has(ev.id) ? "on" : ""}" id="saveBtn">${favs.has(ev.id) ? "★ Saved" : "☆ Save"}</button>` : ""}<span id="online">👥 ${ev.online}</span></span></div>
+      <div class="rh-top">
+        <a class="icon-btn" href="javascript:history.back()" aria-label="Back">←</a>
+        <div class="rh-badges">${badge}<span class="pill muted">${g ? g.emoji + " " : ""}${esc(ev.league)}</span></div>
+        <div class="rh-actions">
+          <span class="pill viewers" id="online"><span class="dot green"></span>${ev.online}</span>
+          ${cfg.auth ? `<button class="save-btn ${favs.has(ev.id) ? "on" : ""}" id="saveBtn">${favs.has(ev.id) ? "★ Saved" : "☆ Save"}</button>` : ""}
+        </div>
+      </div>
       <h1>${esc(ev.title)}</h1>
-      ${ev.score ? `<div class="meta" style="margin-top:4px"><span>${esc(ev.score)} ${ev.detail ? "· " + esc(ev.detail) : ""}</span></div>` : ""}
+      ${ev.score ? `<div class="scoreboard"><b>${esc(ev.score)}</b>${ev.detail ? `<span>${esc(ev.detail)}</span>` : ""}</div>` : ""}
     </div>
-    <div class="msgs" id="msgs"></div>
+    <div class="chat-area">
+      <div class="msgs" id="msgs"></div>
+      <div class="floats" id="floats"></div>
+      <button class="new-pill" id="newPill">New messages ↓</button>
+    </div>
     <div id="composer"></div>
   </div>`;
+
   document.getElementById("saveBtn")?.addEventListener("click", async (e) => {
     const btn = e.currentTarget;
     const on = await toggleFav(ev.id);
     btn.classList.toggle("on", on);
     btn.textContent = on ? "★ Saved" : "☆ Save";
   });
+
   const msgs = document.getElementById("msgs");
-  const add = (html) => {
-    const atBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 80;
+  const newPill = document.getElementById("newPill");
+  let myName = null, lastName = null, lastAt = 0;
+  const nearBottom = () => msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 90;
+  const toBottom = () => { msgs.scrollTop = msgs.scrollHeight; newPill.classList.remove("show"); };
+  msgs.addEventListener("scroll", () => { if (nearBottom()) newPill.classList.remove("show"); });
+  newPill.onclick = toBottom;
+
+  const avatarHtml = (m) => m.avatar
+    ? `<div class="av" style="background-image:url('${esc(m.avatar)}')"></div>`
+    : `<div class="av" style="background:${colorFor(m.name)}22;color:${colorFor(m.name)}">${esc(m.name[0]?.toUpperCase() || "?")}</div>`;
+  const msgHtml = (m) => {
+    // Mensajes seguidos de la misma persona se agrupan
+    const grouped = m.name === lastName && m.at - lastAt < 120000;
+    lastName = m.name; lastAt = m.at;
+    const mine = myName && m.name === myName;
+    const mention = myName && !mine && new RegExp(`@${myName}\\b`, "i").test(m.text);
+    const text = esc(m.text).replace(/@([A-Za-z0-9_]{3,20})/g, '<span class="at">@$1</span>');
+    return `<div class="msg ${grouped ? "grouped" : ""} ${mine ? "mine" : ""} ${mention ? "mention" : ""}">
+      ${grouped ? `<div class="av-space"></div>` : avatarHtml(m)}
+      <div class="bubble">${grouped ? "" : `<div class="who"><b style="color:${colorFor(m.name)}">${esc(m.name)}</b><time>${timeOf(m.at)}</time></div>`}<div class="txt">${text}</div></div>
+    </div>`;
+  };
+  const add = (html, force) => {
+    const atBottom = nearBottom();
     msgs.querySelector(".first")?.remove();
     msgs.insertAdjacentHTML("beforeend", html);
     while (msgs.children.length > 300) msgs.firstChild.remove();
-    if (atBottom) msgs.scrollTop = msgs.scrollHeight;
+    if (atBottom || force) toBottom(); else newPill.classList.add("show");
   };
-  const msgHtml = (m) => `<div class="msg"><b style="color:${colorFor(m.name)}">${esc(m.name)}</b>${esc(m.text)}</div>`;
+
+  // Reacciones flotantes
+  const floats = document.getElementById("floats");
+  const floatEmoji = (emoji) => {
+    if (floats.childElementCount > 40) return;
+    const el = document.createElement("span");
+    el.className = "float";
+    el.textContent = emoji;
+    el.style.right = 12 + Math.random() * 60 + "px";
+    el.style.setProperty("--drift", (Math.random() * 60 - 30) + "px");
+    el.style.animationDuration = 2.2 + Math.random() * 1.2 + "s";
+    floats.appendChild(el);
+    el.addEventListener("animationend", () => el.remove());
+  };
 
   const drawComposer = (canWrite, name) => {
     const c = document.getElementById("composer");
     if (!c) return;
+    myName = name;
     if (!canWrite) {
-      c.innerHTML = `<div class="need-login"><button class="btn" id="joinBtn">Sign up to chat</button></div>`;
+      c.innerHTML = `<div class="join-card"><div><b>Join the conversation</b><span>Create a free account to chat and react.</span></div>
+        <button class="btn" id="joinBtn">Sign up</button></div>`;
       document.getElementById("joinBtn").onclick = () => openLogin("signup");
       return;
     }
-    c.innerHTML = `<div class="quick">${["🔥","😱","👏","😂","💯","Let's go!"].map((q)=>`<button>${q}</button>`).join("")}</div>
-      <form class="send" id="send"><input class="field" id="text" maxlength="300" placeholder="Chat as ${esc(name)}…" autocomplete="off"><button class="btn">Send</button></form>`;
-    const input = document.getElementById("text");
-    document.getElementById("send").onsubmit = (e) => { e.preventDefault(); if (input.value.trim()) socket.emit("message", input.value); input.value = ""; };
-    c.querySelector(".quick").onclick = (e) => { if (e.target.tagName === "BUTTON") socket.emit("message", e.target.textContent); };
-    input.focus();
+    c.innerHTML = `<div class="composer">
+      <div class="react-bar">${REACTIONS.map((r) => `<button class="react" data-r="${r}" aria-label="React ${r}">${r}</button>`).join("")}</div>
+      <div class="picker" id="picker">${PICKER.map((e) => `<button>${e}</button>`).join("")}</div>
+      <form class="send" id="send">
+        <div class="input-wrap">
+          <button type="button" class="emoji-toggle" id="emojiBtn" aria-label="Emojis">😊</button>
+          <input id="text" maxlength="300" placeholder="Send a message as ${esc(name)}…" autocomplete="off">
+          <span class="count" id="count"></span>
+        </div>
+        <button class="send-btn" id="sendBtn" disabled aria-label="Send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6l-.01 6.53L15 12 3.39 13.87z"/></svg></button>
+      </form></div>`;
+    const input = document.getElementById("text"), sendBtn = document.getElementById("sendBtn"), count = document.getElementById("count");
+    const picker = document.getElementById("picker");
+    const update = () => {
+      sendBtn.disabled = !input.value.trim();
+      const left = 300 - input.value.length;
+      count.textContent = left <= 50 ? left : "";
+      count.classList.toggle("low", left <= 20);
+    };
+    input.addEventListener("input", update);
+    document.getElementById("send").onsubmit = (e) => {
+      e.preventDefault();
+      if (!input.value.trim()) return;
+      socket.emit("message", input.value);
+      input.value = ""; update(); picker.classList.remove("open");
+    };
+    document.getElementById("emojiBtn").onclick = () => picker.classList.toggle("open");
+    picker.onclick = (e) => {
+      if (e.target.tagName !== "BUTTON") return;
+      input.value = (input.value + e.target.textContent).slice(0, 300); update(); input.focus();
+    };
+    c.querySelector(".react-bar").onclick = (e) => {
+      const r = e.target.closest("[data-r]");
+      if (!r) return;
+      r.classList.remove("pop"); void r.offsetWidth; r.classList.add("pop");
+      socket.emit("react", r.dataset.r);
+    };
+    update();
+    if (matchMedia("(pointer:fine)").matches) input.focus();
   };
 
   socket = io();
   socket.on("connect", () => socket.emit("join", { roomId: id, name: guestName, token: session?.access_token }));
   socket.on("joined", ({ canWrite, name }) => drawComposer(canWrite, name));
-  socket.on("history", (list) => { msgs.innerHTML = list.map(msgHtml).join("") || `<div class="sys first">Be the first to say something!</div>`; msgs.scrollTop = msgs.scrollHeight; });
-  socket.on("message", (m) => add(msgHtml(m)));
-  socket.on("system", (t) => t && add(`<div class="sys">⚠️ ${esc(t)}</div>`));
-  socket.on("online", (n) => { const o = document.getElementById("online"); if (o) o.textContent = `👥 ${n}`; });
+  socket.on("history", (list) => {
+    lastName = null;
+    msgs.innerHTML = list.map(msgHtml).join("") || `<div class="first"><div class="big">💬</div><b>No messages yet</b><span>Be the first to say something!</span></div>`;
+    toBottom();
+  });
+  socket.on("message", (m) => add(msgHtml(m), myName && m.name === myName));
+  socket.on("system", (t) => { if (t) { lastName = null; add(`<div class="sys">⚠️ ${esc(t)}</div>`, true); } });
+  socket.on("react", floatEmoji);
+  socket.on("online", (n) => { const o = document.getElementById("online"); if (o) o.innerHTML = `<span class="dot green"></span>${n}`; });
 }
 
 function askName(done) {
