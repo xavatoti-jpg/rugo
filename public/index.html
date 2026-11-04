@@ -249,6 +249,22 @@
   .big-row .body b { display:block; }
   .big-row .body small { color:var(--muted); font-size:13px; }
 
+  /* My Chats: pestañas */
+  .tc { font-size:11px; background:#ffffff22; border-radius:999px; padding:1px 7px; margin-left:4px; }
+  .tc:empty { display:none; }
+  .seg button.on .tc { background:#ffffff40; }
+  .mine-card { background:var(--panel); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .mine-main { display:flex; align-items:center; gap:12px; padding:12px 14px; }
+  .mine-main:hover { background:#ffffff06; }
+  .mine-main .body { flex:1; min-width:0; }
+  .mine-main .title { font-weight:700; }
+  .mine-main .lg { font-size:12px; color:var(--muted); margin-top:2px; }
+  .mine-main .go { background:var(--accent); color:#fff; border-radius:10px; padding:8px 12px; font-weight:700; font-size:14px; }
+  .mine-ico { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; font-size:22px; flex-shrink:0; background-color:var(--panel2); background:color-mix(in srgb, var(--c) 30%, var(--panel2)); }
+  .mine-actions { display:flex; align-items:center; gap:8px; padding:8px 14px 12px; border-top:1px solid var(--line); }
+  .mine-code { flex:1; font-size:12px; color:var(--muted); }
+  .mine-code b { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; color:#c4a8ff; letter-spacing:.12em; font-size:14px; margin-left:4px; }
+
   /* Categorías con banners */
   .page-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
   .page-head .sub { margin:0; }
@@ -511,8 +527,8 @@
     .g-mob { display:grid; margin-left:auto; margin-right:-11px; width:32px; height:32px; }
     .ghost-btn, .login-btn { padding:7px 11px; }
   }
+  @media (max-width:440px) { .mc-t { display:none; } }
   @media (max-width:380px) {
-    .mc-t { display:none; }
     .tagline { width:112px; font-size:9.5px; }
   }
 </style>
@@ -691,7 +707,7 @@ function route() {
   if (h.startsWith("#/create")) return showCreate(new URLSearchParams(h.split("?")[1] || ""));
   if ((m = h.match(/^#\/c\/([A-Za-z0-9]+)$/))) return openByCode(m[1]);
   if ((m = h.match(/^#\/g\/([^/]+)\/s\/(.+)$/))) return showSub(m[1], decodeURIComponent(m[2]));
-  if (h === "#/mychats") return showMyChats();
+  if (h.startsWith("#/mychats")) return showMyChats(new URLSearchParams(h.split("?")[1] || ""));
   if (h === "#/mod") return showModPanel();
   if (h === "#/settings") return showSettings();
   if (h === "#/calendar") return showCalendar(null);
@@ -852,38 +868,81 @@ function liveCard(e, rank) {
 }
 
 // ---------- My Chats: favoritos ----------
-async function showMyChats() {
+async function showMyChats(params = new URLSearchParams()) {
   header("my");
   if (!cfg.auth) return (location.hash = "#/");
   if (!me?.username) {
-    app.innerHTML = `<main><h1>★ My Chats</h1><div class="empty">Save your favorite chats and find them here.<br><br><button class="btn" id="su">Sign up to save chats</button></div></main>`;
+    app.innerHTML = `<main><h1>My Chats</h1><div class="empty">Create your own chats and save your favorites here.<br><br><button class="btn" id="su">Sign up</button></div></main>`;
     document.getElementById("su").onclick = () => openLogin("signup");
     return;
   }
-  app.innerHTML = `<main><h1>★ My Chats</h1><p class="sub">Your saved chats.</p><div id="fav"><div class="empty">Loading…</div></div></main>`;
+  app.innerHTML = `<main><h1>My Chats</h1>
+    <div class="seg big-seg" id="mtab"><button data-v="mine">🛠️ My chats <span class="tc" id="cMine"></span></button><button data-v="fav">★ Favorites <span class="tc" id="cFav"></span></button></div>
+    <div id="fav"><div class="empty">Loading…</div></div></main>`;
   if (!genres.length) await loadGenres();
   const [r, rm] = await Promise.all([fetch("/api/favorites", { headers: authHeader() }), fetch("/api/chats/mine", { headers: authHeader() })]);
   const list = r.ok ? await r.json() : [];
   const created = rm.ok ? await rm.json() : [];
   favs = new Set(list.map((f) => f.id));
-  const live = list.filter((e) => e.state === "live" || e.state === "post").sort((a, b) => b.online - a.online);
-  const soon = list.filter((e) => e.state === "upcoming").sort((a, b) => new Date(a.start) - new Date(b.start));
-  const past = list.filter((e) => e.state === "done");
-  const row = (e, isPast) => `<div class="fav-row ${isPast ? "past" : ""}">
-      ${isPast ? `<div class="live-card"><div class="body"><div class="top">Ended</div><div class="title">${esc(e.title)}</div></div></div>`
-        : e.state === "upcoming" ? `<a class="live-card" href="#/room/${encodeURIComponent(e.id)}"><div class="body"><div class="top">${genreById(e.genre)?.emoji || ""} ${esc(e.league || "")}</div><div class="title">${esc(e.title)}</div><div class="score">${e.allDay ? new Date(e.start).toLocaleDateString("en-US", { weekday:"short", month:"short", day:"numeric", timeZone:"UTC" }) : new Date(e.start).toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}</div></div><div class="go">Open</div></a>`
-        : liveCard(e)}
-      <button class="unsave" data-id="${esc(e.id)}" title="Remove from My Chats">✕</button></div>`;
-  const section = (title, items, isPast) => items.length ? `<h2>${title}</h2><div class="live-list">${items.map((e) => row(e, isPast)).join("")}</div>` : "";
-  const mineHtml = created.length ? `<h2>🛠️ Created by you</h2><div class="live-list">${created.map((e) => liveCard(e)).join("")}</div>` : "";
-  document.getElementById("fav").innerHTML = mineHtml + (list.length
-    ? section(`<span class="dot"></span> Live now`, live) + section("📅 Coming up", soon) + section("Past", past, true)
-    : `<div class="empty" style="margin-top:14px">You haven't saved any chats yet.<br>Open any chat and tap <b>☆ Save</b>.<br><br><a href="#/">Browse live chats</a> · <a href="#/create">Create a chat</a></div>`);
+  if (!document.getElementById("fav")) return;
+  document.getElementById("cMine").textContent = created.length || "";
+  document.getElementById("cFav").textContent = list.length || "";
+  // Pestaña: la que pidió la persona; si no, "My chats" si creó alguno, si no "Favorites"
+  let tab = params.get("tab") || (created.length || !list.length ? "mine" : "fav");
+
+  const draw = () => {
+    document.querySelectorAll("#mtab button").forEach((b) => b.classList.toggle("on", b.dataset.v === tab));
+    history.replaceState(null, "", "#/mychats" + (tab === "fav" ? "?tab=fav" : ""));
+    const box = document.getElementById("fav");
+    if (tab === "mine") {
+      box.innerHTML = created.length ? `<p class="sub">Chats you created. You're the moderator of each one.</p><div class="live-list">${created.map((e) => {
+        const g = genreById(e.genre);
+        return `<div class="mine-card">
+          <a class="mine-main" href="#/room/${encodeURIComponent(e.id)}">
+            <div class="mine-ico" style="--c:${g?.color || "#9b5cff"}">${g?.emoji || "💬"}</div>
+            <div class="body"><div class="title">${esc(e.title)}</div>
+              <div class="lg">${e.isPublic ? "🌐 Public" : "🔒 Private"} · ${esc(g?.name || "")}${e.category && e.category !== "Community" ? " · " + esc(e.category) : ""}${e.online ? ` · 👥 ${e.online} now` : ""}</div></div>
+            <div class="go">Open</div></a>
+          <div class="mine-actions"><span class="mine-code">Code <b>${esc(e.code)}</b></span>
+            <button class="set-btn" data-share="${esc(e.id)}">↗ Share</button>
+            <button class="set-btn danger" data-close="${esc(e.id)}">Close</button></div>
+        </div>`;
+      }).join("")}</div><a class="create-btn" href="#/create" style="display:inline-block;margin-top:16px">＋ Create another chat</a>`
+        : `<div class="empty">You haven't created any chats yet.<br><br><a class="btn" href="#/create">＋ Create a chat</a></div>`;
+      return;
+    }
+    const live = list.filter((e) => e.state === "live" || e.state === "post").sort((a, b) => b.online - a.online);
+    const soon = list.filter((e) => e.state === "upcoming").sort((a, b) => new Date(a.start) - new Date(b.start));
+    const past = list.filter((e) => e.state === "done");
+    const row = (e, isPast) => `<div class="fav-row ${isPast ? "past" : ""}">
+        ${isPast ? `<div class="live-card"><div class="body"><div class="top">Ended</div><div class="title">${esc(e.title)}</div></div></div>`
+          : e.state === "upcoming" ? `<a class="live-card" href="#/room/${encodeURIComponent(e.id)}"><div class="body"><div class="top">${genreById(e.genre)?.emoji || ""} ${esc(e.league || "")}</div><div class="title">${esc(e.title)}</div><div class="score">${e.allDay ? new Date(e.start).toLocaleDateString("en-US", { weekday:"short", month:"short", day:"numeric", timeZone:"UTC" }) : new Date(e.start).toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}</div></div><div class="go">Open</div></a>`
+          : liveCard(e)}
+        <button class="unsave" data-id="${esc(e.id)}" title="Remove from Favorites">✕</button></div>`;
+    const section = (title, items, isPast) => items.length ? `<h2>${title}</h2><div class="live-list">${items.map((e) => row(e, isPast)).join("")}</div>` : "";
+    box.innerHTML = list.length
+      ? section(`<span class="dot"></span> Live now`, live) + section("📅 Coming up", soon) + section("Past", past, true)
+      : `<div class="empty">No favorites yet.<br>Open any chat and tap <b>☆ Save</b> to keep it here.<br><br><a href="#/">Browse live chats</a></div>`;
+  };
+  draw();
+
+  document.getElementById("mtab").onclick = (e) => {
+    const v = e.target.closest("[data-v]")?.dataset.v;
+    if (v && v !== tab) { tab = v; draw(); }
+  };
   document.getElementById("fav").onclick = async (e) => {
-    const id = e.target.closest(".unsave")?.dataset.id;
-    if (!id) return;
-    await toggleFav(id);
-    showMyChats();
+    const un = e.target.closest(".unsave")?.dataset.id;
+    if (un) { await toggleFav(un); return showMyChats(new URLSearchParams("tab=fav")); }
+    const sh = e.target.closest("[data-share]")?.dataset.share;
+    if (sh) { const c = created.find((x) => x.id === sh); if (c) shareChat({ ...c, title: c.title }); return; }
+    const cl = e.target.closest("[data-close]")?.dataset.close;
+    if (cl) {
+      if (!confirm("Close this chat for everyone? This can't be undone.")) return;
+      const res = await fetch("/api/chats/" + encodeURIComponent(cl), { method: "DELETE", headers: authHeader() });
+      if (!res.ok) return alert((await res.json().catch(() => ({}))).error || "Could not close the chat.");
+      toast("Chat closed");
+      showMyChats(new URLSearchParams("tab=mine"));
+    }
   };
   header("my");
 }
