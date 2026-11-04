@@ -57,7 +57,9 @@ async function fetchLeagueDay(l, day) {
       category: l.cat,
       league: l.label,
       start: e.date,
-      state: st.state === "in" ? "live" : st.state === "post" ? "post" : "upcoming",
+      // Pospuestos o cancelados: ESPN los marca como "post", pero no se jugaron
+      state: /POSTPONED|CANCELED|CANCELLED|SUSPENDED|FORFEIT/.test(st.name || "") ? "done"
+        : st.state === "in" ? "live" : st.state === "post" ? "post" : "upcoming",
       detail: st.shortDetail || "",
       score: scoreOf(e),
       teams: teamsOf(e, l.sport),

@@ -67,10 +67,11 @@ app.get("/api/genres", (req, res) => {
 app.get("/api/live", (req, res) => {
   const list = Events.allEvents()
     .map(withOnline)
-    // Salas fijas (charla general, películas) solo salen si hay gente adentro
-    // Juegos que acaban de terminar (post-game) también, si hay gente comentando
-    .filter((e) => (e.state === "live" && !e.always && !e.ongoing) || ((e.always || e.ongoing || e.state === "post") && e.online > 0))
-    .sort((a, b) => b.online - a.online || new Date(b.start) - new Date(a.start));
+    // En vivo + juegos que acaban de terminar (post-game, 2 horas).
+    // Salas fijas (charla general, películas) solo salen si hay gente adentro.
+    .filter((e) => (e.state === "live" && !e.always && !e.ongoing) || e.state === "post" || ((e.always || e.ongoing) && e.online > 0))
+    // Orden: primero lo que está en vivo (más gente primero), después los que terminaron
+    .sort((a, b) => (a.state === "post") - (b.state === "post") || b.online - a.online || new Date(b.start) - new Date(a.start));
   res.json(list);
 });
 

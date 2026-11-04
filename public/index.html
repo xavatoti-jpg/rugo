@@ -30,7 +30,12 @@
   /* Barra de arriba */
   header { padding:10px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:6px; position:sticky; top:0; background:var(--bg); z-index:5; }
   .logo { font-weight:900; font-size:21px; margin-right:6px; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; letter-spacing:-.02em; }
-  .logo img { width:30px; height:30px; transition:transform .25s; }
+  .logo img { width:34px; height:34px; transition:transform .25s; }
+  .wm-wrap { display:flex; flex-direction:column; line-height:1; }
+  .wm { font-size:21px; }
+  .tagline { font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:.01em; margin-top:3px; white-space:nowrap; width:128px; overflow:hidden; }
+  .tagline i { font-style:normal; display:inline-block; background:linear-gradient(90deg, #ffd166, #ff7a35 50%, #e84393); -webkit-background-clip:text; background-clip:text; color:transparent; transition:opacity .25s, transform .25s; }
+  .tagline i.out { opacity:0; transform:translateY(5px); }
   .logo:hover img { transform:rotate(-8deg) scale(1.08); }
   .logo b { color:var(--accent); font-weight:inherit; }
   .tab { padding:7px 11px; border-radius:999px; color:var(--muted); font-weight:600; font-size:14px; white-space:nowrap; }
@@ -187,15 +192,6 @@
   .mod-item .k { font-size:22px; }
   .lift { background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:7px 12px; cursor:pointer; font-weight:700; font-size:13px; }
   .lift:hover { border-color:#2ecc71; color:#2ecc71; }
-
-  /* Titular de la portada */
-  .hero-line { margin:2px 0 18px; }
-  .hero-line h1 { font-size:28px; line-height:1.15; margin:0; letter-spacing:-.02em; font-weight:900; }
-  @media (min-width:720px) { .hero-line h1 { font-size:38px; } }
-  .hero-line .rot { display:inline-block; background:linear-gradient(90deg, #ffd166, #ff7a35 45%, #e84393 75%, #9b5cff); -webkit-background-clip:text; background-clip:text; color:transparent; transition:opacity .25s, transform .25s; }
-  .hero-line .rot.out { opacity:0; transform:translateY(8px); }
-  .hero-line .dotp { color:var(--accent); }
-  .hero-line p { margin:6px 0 0; color:var(--muted); font-size:15px; }
 
   /* Portada compacta */
   .home .h-sec { margin-bottom:26px; }
@@ -443,9 +439,17 @@
   .nav { display:flex; gap:4px; }
   .auth { display:flex; gap:8px; align-items:center; }
   /* Celular: las pestañas bajan a una segunda fila (siguen arriba a la izquierda) */
+  .g-mob { display:none; }
   @media (max-width:560px) {
     header { flex-wrap:wrap; row-gap:8px; padding-bottom:8px; }
-    .nav { order:3; width:100%; margin-left:-11px; }
+    .nav { order:3; width:100%; margin-left:-11px; align-items:center; }
+    .g-desk { display:none; }
+    .g-mob { display:grid; margin-left:auto; margin-right:-11px; width:32px; height:32px; }
+    .ghost-btn, .login-btn { padding:7px 11px; }
+  }
+  @media (max-width:380px) {
+    .mc-t { display:none; }
+    .tagline { width:112px; font-size:9.5px; }
   }
 </style>
 </head>
@@ -579,19 +583,30 @@ function chooseUsername() {
 }
 
 // ================= Barra de arriba =================
+// Eslogan que cambia debajo del nombre: "live chat for games / movies / …"
+const TAG_WORDS = ["anything", "games", "movies", "award shows", "concerts", "reality TV", "watch parties"];
+let tagIdx = 0;
+setInterval(() => {
+  const el = document.getElementById("rotH");
+  tagIdx = (tagIdx + 1) % TAG_WORDS.length;
+  if (!el) return;
+  el.classList.add("out");
+  setTimeout(() => { el.textContent = TAG_WORDS[tagIdx]; el.classList.remove("out"); }, 250);
+}, 2400);
+
 function header(active) {
   requestAnimationFrame(() => document.documentElement.style.setProperty("--hdr", hdr.offsetHeight + "px"));
   const tab = (href, label, key) => `<a class="tab ${active === key ? "on" : ""}" href="${href}">${label}</a>`;
   let right = "";
   if (cfg.auth) {
     right = me?.username
-      ? `<a class="mychats-btn ${active === "my" ? "on" : ""}" href="#/mychats">★ My Chats <span class="n" style="${favs.size ? "" : "display:none"}">${favs.size}</span></a><button class="avatar" id="av" style="${me.avatar ? `background-image:url('${esc(me.avatar)}')` : `color:${colorFor(me.username)}`}">${me.avatar ? "" : esc(me.username[0].toUpperCase())}</button>`
+      ? `<a class="mychats-btn ${active === "my" ? "on" : ""}" href="#/mychats" aria-label="My Chats">★<span class="mc-t"> My Chats</span> <span class="n" style="${favs.size ? "" : "display:none"}">${favs.size}</span></a><button class="avatar" id="av" style="${me.avatar ? `background-image:url('${esc(me.avatar)}')` : `color:${colorFor(me.username)}`}">${me.avatar ? "" : esc(me.username[0].toUpperCase())}</button>`
       : `<button class="ghost-btn" id="signinBtn">Sign in</button><button class="login-btn" id="signupBtn">Sign up</button>`;
   }
   const gear = `<a class="gear ${active === "set" ? "on" : ""}" href="#/settings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>`;
-  hdr.innerHTML = `<a class="logo" href="#/" aria-label="Rugo home"><img src="/brand/rugo-mark.svg" alt="" width="30" height="30"><span class="wm">Rug<b>o</b></span></a>
-    <nav class="nav">${tab("#/categories", "Categories", "cat")}${tab("#/calendar", "Calendar", "cal")}</nav>
-    <div class="spacer"></div><div class="auth">${right}${gear}</div>`;
+  hdr.innerHTML = `<a class="logo" href="#/" aria-label="Rugo home"><img src="/brand/rugo-mark.svg" alt="" width="34" height="34"><span class="wm-wrap"><span class="wm">Rug<b>o</b></span><small class="tagline">live chat for <i id="rotH">${esc(TAG_WORDS[tagIdx])}</i></small></span></a>
+    <nav class="nav">${tab("#/categories", "Categories", "cat")}${tab("#/calendar", "Calendar", "cal")}${gear.replace('class="gear', 'class="gear g-mob')}</nav>
+    <div class="spacer"></div><div class="auth">${right}${gear.replace('class="gear', 'class="gear g-desk')}</div>`;
   document.getElementById("signinBtn")?.addEventListener("click", () => openLogin("signin"));
   document.getElementById("signupBtn")?.addEventListener("click", () => openLogin("signup"));
   document.getElementById("av")?.addEventListener("click", (e) => {
@@ -637,8 +652,6 @@ const genreById = (id) => genres.find((g) => g.id === id);
 async function showHome() {
   header("home");
   app.innerHTML = `<main class="wide home">
-    <div class="hero-line"><h1>Live chat for <span class="rot" id="rot">anything</span><span class="dotp">.</span></h1>
-      <p>Jump into the conversation with people around the world — right now.</p></div>
     <section class="h-sec">
       <div class="h-head"><h2><span class="dot"></span> Live now</h2><div class="h-right"><small id="liveCount"></small>
         <button class="arrow" id="prev" aria-label="Previous">‹</button><button class="arrow" id="next" aria-label="Next">›</button></div></div>
@@ -668,7 +681,8 @@ async function showHome() {
     const [list] = await Promise.all([api("/api/live"), genres.length ? null : loadGenres()]);
     if (!document.getElementById("car")) return;
     const n = list.reduce((t, e) => t + e.online, 0);
-    document.getElementById("liveCount").textContent = list.length ? `${list.length} live${n ? ` · ${n} chatting` : ""}` : "";
+    const nLive = list.filter((e) => e.state !== "post").length, nPost = list.length - nLive;
+    document.getElementById("liveCount").textContent = list.length ? [nLive && `${nLive} live`, nPost && `${nPost} just ended`, n && `${n} chatting`].filter(Boolean).join(" · ") : "";
     // Solo redibujar si algo cambió (así no salta el carrusel)
     const newSig = JSON.stringify(list.map((e) => [e.id, e.score, e.detail, e.online]));
     if (newSig === sig) return;
@@ -706,17 +720,6 @@ async function showHome() {
         <span class="see">${favs.has(e.id) ? "★" : "›"}</span></a>`;
     }).join("");
   };
-
-  // Palabra que va cambiando en el titular
-  const words = ["games", "movies", "award shows", "concerts", "reality TV", "anything"];
-  let wi = words.length - 1;
-  const rot = document.getElementById("rot");
-  const rotTimer = setInterval(() => {
-    if (!document.getElementById("rot")) return clearInterval(rotTimer);
-    wi = (wi + 1) % words.length;
-    rot.classList.add("out");
-    setTimeout(() => { rot.textContent = words[wi]; rot.classList.remove("out"); }, 260);
-  }, 2200);
 
   await drawLive();
   drawRest();
