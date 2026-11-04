@@ -118,6 +118,8 @@
   .icon-btn:hover { border-color:var(--muted); }
   .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:var(--panel); border:1px solid var(--line); font-size:12px; font-weight:700; white-space:nowrap; }
   .pill.live { color:var(--live); border-color:#ff475755; background:#ff47571a; }
+  .final { color:#fdcb6e; font-weight:800; }
+  .pill.final { border-color:#fdcb6e55; background:#fdcb6e14; }
   .pill.muted { color:var(--muted); font-weight:600; overflow:hidden; text-overflow:ellipsis; }
   .pill.viewers { font-variant-numeric:tabular-nums; }
   .dot.green { background:#2ecc71; }
@@ -400,7 +402,7 @@ function liveCard(e, rank) {
   return `<a class="live-card ${e.always ? "general" : ""} ${rank && rank <= 3 && e.online > 0 ? "hot" : ""}" href="#/room/${encodeURIComponent(e.id)}">
     ${rank ? `<div class="rank">${rank}</div>` : ""}
     <div class="body">
-      <div class="top">${e.always ? "💬 Always open" : e.ongoing ? "🍿 In theaters" : `<span class="badge-live"><span class="dot"></span>LIVE</span>`}${g && rank && !e.ongoing ? `<span>${g.emoji}</span>` : ""}<span>${esc(e.always || e.ongoing ? "" : e.league)}</span>${e.detail ? `<span>· ${esc(e.detail)}</span>` : ""}</div>
+      <div class="top">${e.always ? "💬 Always open" : e.ongoing ? "🍿 In theaters" : e.state === "post" ? `<span class="final">🏁 FINAL</span>` : `<span class="badge-live"><span class="dot"></span>LIVE</span>`}${g && rank && !e.ongoing ? `<span>${g.emoji}</span>` : ""}<span>${esc(e.always || e.ongoing ? "" : e.league)}</span>${e.detail ? `<span>· ${esc(e.detail)}</span>` : ""}</div>
       <div class="title">${esc(e.title)}</div>
       ${e.score ? `<div class="score">${esc(e.score)}</div>` : ""}
     </div>
@@ -422,7 +424,7 @@ async function showMyChats() {
   const r = await fetch("/api/favorites", { headers: authHeader() });
   const list = r.ok ? await r.json() : [];
   favs = new Set(list.map((f) => f.id));
-  const live = list.filter((e) => e.state === "live").sort((a, b) => b.online - a.online);
+  const live = list.filter((e) => e.state === "live" || e.state === "post").sort((a, b) => b.online - a.online);
   const soon = list.filter((e) => e.state === "upcoming").sort((a, b) => new Date(a.start) - new Date(b.start));
   const past = list.filter((e) => e.state === "done");
   const row = (e, isPast) => `<div class="fav-row ${isPast ? "past" : ""}">
@@ -468,7 +470,9 @@ async function showGenre(gid) {
     <a class="cal-btn" href="#/g/${gid}/calendar"><div><b>📅 ${esc(g.name)} calendar</b><small id="calInfo">What's coming up in the next few days</small></div><span>›</span></a>
   </main>`;
   const events = await api("/api/events?genre=" + gid);
-  const live = events.filter((e) => e.state === "live" && !e.always).sort((a, b) => b.online - a.online);
+  // En vivo primero; después los que acaban de terminar (post-game, 2 horas)
+  const live = [...events.filter((e) => e.state === "live" && !e.always).sort((a, b) => b.online - a.online),
+    ...events.filter((e) => e.state === "post").sort((a, b) => b.online - a.online)];
   const general = events.find((e) => e.always);
   const upcoming = events.filter((e) => e.state === "upcoming");
   document.getElementById("live").innerHTML =
@@ -569,6 +573,7 @@ async function showRoom(id) {
     ? `Opens ${new Date(ev.start).toLocaleDateString("en-US", { month:"short", day:"numeric", timeZone:"UTC" })}`
     : `Starts ${new Date(ev.start).toLocaleString("en-US", { weekday:"short", hour:"numeric", minute:"2-digit" })}`) : "";
   const badge = isLive ? `<span class="pill live"><span class="dot"></span>LIVE</span>`
+    : ev.state === "post" ? `<span class="pill final">🏁 FINAL · Postgame</span>`
     : ev.ongoing ? `<span class="pill">🍿 Now playing</span>` : ev.always ? `<span class="pill">💬 Always open</span>`
     : when ? `<span class="pill">📅 ${esc(when)}</span>` : "";
 

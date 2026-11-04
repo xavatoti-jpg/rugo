@@ -26,7 +26,9 @@ Events.start();
 // ---------------------------------------------------------------
 // 2. API para el frontend
 // ---------------------------------------------------------------
-const history = new Map(); // roomId -> últimos mensajes
+const Messages = require("./messages");
+// Limpieza cada hora: mensajes de más de 7 días y salas que ya cerraron
+setInterval(() => Messages.cleanup(new Set(Events.allEvents().map((e) => e.id))).catch(() => {}), 3600e3);
 
 function onlineCount(roomId) {
   return io.sockets.adapter.rooms.get(roomId)?.size || 0;
@@ -50,7 +52,8 @@ app.get("/api/live", (req, res) => {
   const list = Events.allEvents()
     .map(withOnline)
     // Salas fijas (charla general, películas) solo salen si hay gente adentro
-    .filter((e) => (e.state === "live" && !e.always && !e.ongoing) || ((e.always || e.ongoing) && e.online > 0))
+    // Juegos que acaban de terminar (post-game) también, si hay gente comentando
+    .filter((e) => (e.state === "live" && !e.always && !e.ongoing) || ((e.always || e.ongoing || e.state === "post") && e.online > 0))
     .sort((a, b) => b.online - a.online || new Date(b.start) - new Date(a.start));
   res.json(list);
 });
@@ -139,6 +142,7 @@ io.on("connection", (socket) => {
       const me = await Auth.userFromToken(token).catch(() => null);
       if (me?.profile?.username) {
         socket.data.name = me.profile.username;
+        socket.data.userId = me.user.id;
         socket.data.avatar = me.profile.avatar_url || me.user.user_metadata?.avatar_url || null;
       }
     } else {
@@ -156,7 +160,7 @@ io.on("connection", (socket) => {
     socket.data.room = roomId;
     socket.join(roomId);
     socket.emit("joined", { canWrite: Boolean(socket.data.name), name: socket.data.name });
-    socket.emit("history", history.get(roomId) || []);
+    socket.emit("history", await Messages.recent(roomId));
     io.to(roomId).emit("online", onlineCount(roomId));
   });
 
@@ -174,10 +178,7 @@ io.on("connection", (socket) => {
       text: result.text,
       at: Date.now(),
     };
-    const list = history.get(room) || [];
-    list.push(msg);
-    if (list.length > 100) list.shift();
-    history.set(room, list);
+    Messages.add(room, msg, socket.data.userId);
     io.to(room).emit("message", msg);
   });
 

@@ -33,3 +33,18 @@ create table if not exists public.favorites (
 );
 alter table public.favorites enable row level security;
 grant select, insert, update, delete on public.favorites to service_role;
+
+-- ============ Mensajes del chat (se guardan 7 días) ============
+create table if not exists public.messages (
+  id bigint generated always as identity primary key,
+  room_id text not null,
+  user_id uuid references auth.users (id) on delete set null,
+  name text not null,
+  avatar text,
+  text text not null check (char_length(text) <= 300),
+  created_at timestamptz not null default now()
+);
+create index if not exists messages_room_time on public.messages (room_id, created_at desc);
+create index if not exists messages_time on public.messages (created_at);
+alter table public.messages enable row level security;
+grant select, insert, delete on public.messages to service_role;

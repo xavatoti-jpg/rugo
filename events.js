@@ -34,6 +34,7 @@ const LEAGUES = [
 ];
 
 const DAYS_AHEAD = 7;
+const POSTGAME_HOURS = 2; // la sala sigue abierta 2 horas después del final
 const HOUR = 3600e3;
 
 // Datos por día: { "20261102": [eventos] }
@@ -56,7 +57,7 @@ async function fetchLeagueDay(l, day) {
       category: l.cat,
       league: l.label,
       start: e.date,
-      state: st.state === "in" ? "live" : st.state === "post" ? "done" : "upcoming",
+      state: st.state === "in" ? "live" : st.state === "post" ? "post" : "upcoming",
       detail: st.shortDetail || "",
       score: scoreOf(e),
     };
@@ -110,7 +111,8 @@ function specialEvents() {
   return list.map((e) => {
     const start = new Date(e.start).getTime();
     const end = start + (e.hours || 4) * HOUR;
-    return { ...e, special: true, state: now >= start && now < end ? "live" : now >= end ? "done" : "upcoming" };
+    const state = now < start ? "upcoming" : now < end ? "live" : now < end + POSTGAME_HOURS * HOUR ? "post" : "done";
+    return { ...e, special: true, state, endedAt: state === "post" ? end : undefined };
   });
 }
 
@@ -136,11 +138,23 @@ function sampleEvents() {
     { id: "demo-3", title: "Miami Heat at New York Knicks", category: "Basketball", league: "NBA", start: at(3), state: "upcoming" },
     { id: "demo-4", title: "Chiefs at Eagles", category: "Football", league: "NFL", start: at(26), state: "upcoming" },
     { id: "demo-5", title: "Yankees at Dodgers", category: "Baseball", league: "MLB", start: at(50), state: "upcoming" },
+    { id: "demo-6", title: "Warriors at Suns", category: "Basketball", league: "NBA", start: at(-3), state: "post", detail: "Final", score: "GSW 112 - 108 PHX" },
   ].map((e) => ({ genre: "sports", ...e }));
 }
 
+// Cuándo terminó cada juego (la primera vez que ESPN lo marcó como final)
+const finishedAt = new Map();
+function withPostgame(e) {
+  if (e.state !== "post") return e;
+  const start = new Date(e.start).getTime();
+  if (!finishedAt.has(e.id)) finishedAt.set(e.id, Date.now());
+  // Si el servidor se reinició, no sabemos la hora exacta: un juego dura ~3 h como máximo razonable
+  const ended = Math.min(finishedAt.get(e.id), start + 5 * HOUR);
+  return Date.now() - ended < POSTGAME_HOURS * HOUR ? { ...e, endedAt: ended } : { ...e, state: "done" };
+}
+
 function allEvents() {
-  const sports = usingSamples ? sampleEvents() : dedupe(Object.values(sportsByDay).flat());
+  const sports = (usingSamples ? sampleEvents() : dedupe(Object.values(sportsByDay).flat())).map(withPostgame);
   const limit = Date.now() + (DAYS_AHEAD + 1) * 86400e3;
   return [...generalRooms(), ...specialEvents(), ...Movies.asEvents(), ...sports]
     // Los especiales (Oscars, etc.) salen aunque falten semanas; los partidos, solo 7 días
