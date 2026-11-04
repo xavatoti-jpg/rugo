@@ -21,7 +21,7 @@ async function userFromToken(token) {
   if (hit && Date.now() - hit.at < 5 * 60e3) return hit;
   const { data, error } = await admin.auth.getUser(token);
   if (error || !data?.user) return null;
-  const { data: profile } = await admin.from("profiles").select("username, avatar_url").eq("id", data.user.id).maybeSingle();
+  const { data: profile } = await admin.from("profiles").select("*").eq("id", data.user.id).maybeSingle();
   const entry = { user: data.user, profile, at: Date.now() };
   cache.set(token, entry);
   if (cache.size > 5000) cache.delete(cache.keys().next().value);
@@ -46,7 +46,7 @@ function routes(app) {
   app.get("/api/me", async (req, res) => {
     const me = await userFromToken(bearer(req));
     if (!me) return res.status(401).json({ error: "Not signed in" });
-    res.json({ id: me.user.id, username: me.profile?.username || null, avatar: me.profile?.avatar_url || me.user.user_metadata?.avatar_url || null });
+    res.json({ id: me.user.id, username: me.profile?.username || null, role: me.profile?.role || "user", avatar: me.profile?.avatar_url || me.user.user_metadata?.avatar_url || null });
   });
 
   // Elegir nombre de usuario (solo la primera vez)

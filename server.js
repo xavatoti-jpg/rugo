@@ -6,6 +6,9 @@ const fs = require("fs");
 const { Server } = require("socket.io");
 const { checkMessage } = require("./moderation");
 const Auth = require("./auth");
+const Mod = require("./mod");
+const crypto = require("crypto");
+Mod.start();
 
 const app = express();
 const server = http.createServer(app);
@@ -109,6 +112,23 @@ app.delete("/api/favorites/:roomId", async (req, res) => {
   res.json({ saved: false });
 });
 
+// ---------- Panel de moderación ----------
+app.get("/api/mod/actions", async (req, res) => {
+  const me = await signedIn(req, res);
+  if (!me) return;
+  if (!Mod.isStaff(me.profile?.role)) return res.status(403).json({ error: "Not allowed" });
+  const titles = new Map(Events.allEvents().map((e) => [e.id, e.title]));
+  res.json(Mod.list().map((a) => ({ ...a, room_title: a.room_id ? titles.get(a.room_id) || "(ended chat)" : null })));
+});
+
+app.delete("/api/mod/actions/:id", async (req, res) => {
+  const me = await signedIn(req, res);
+  if (!me) return;
+  if (!Mod.isStaff(me.profile?.role)) return res.status(403).json({ error: "Not allowed" });
+  await Mod.remove(req.params.id);
+  res.json({ ok: true });
+});
+
 // Películas en cartelera por región: ?region=US | PR
 const Movies = require("./movies");
 app.get("/api/movies", (req, res) => {
@@ -157,6 +177,7 @@ io.on("connection", (socket) => {
       if (me?.profile?.username) {
         socket.data.name = me.profile.username;
         socket.data.userId = me.user.id;
+        socket.data.role = me.profile.role || "user";
         socket.data.avatar = me.profile.avatar_url || me.user.user_metadata?.avatar_url || null;
       }
     } else {
@@ -166,6 +187,13 @@ io.on("connection", (socket) => {
       else if (clean) socket.emit("system", "That nickname is not allowed.");
     }
 
+    // Baneados: no pueden entrar
+    const uid = socket.data.userId;
+    if (uid && !Mod.isStaff(socket.data.role)) {
+      const ban = Mod.globalBan(uid) || Mod.roomBan(uid, roomId);
+      if (ban) return socket.emit("banned", { global: ban.room_id === null, until: ban.until, reason: ban.reason });
+    }
+
     if (socket.data.room) {
       const old = socket.data.room;
       socket.leave(old);
@@ -173,7 +201,8 @@ io.on("connection", (socket) => {
     }
     socket.data.room = roomId;
     socket.join(roomId);
-    socket.emit("joined", { canWrite: Boolean(socket.data.name), name: socket.data.name });
+    const muted = uid ? Mod.mute(uid, roomId) : null;
+    socket.emit("joined", { canWrite: Boolean(socket.data.name), name: socket.data.name, role: socket.data.role || "user", mutedUntil: muted?.until || null });
     socket.emit("history", await Messages.recent(roomId));
     io.to(roomId).emit("online", onlineCount(roomId));
   });
@@ -182,11 +211,16 @@ io.on("connection", (socket) => {
     const room = socket.data.room;
     if (!room) return;
     if (!socket.data.name) return socket.emit("system", "Sign in to chat.");
+    const m = socket.data.userId && Mod.mute(socket.data.userId, room);
+    if (m) return socket.emit("system", m.until ? `You are muted until ${new Date(m.until).toUTCString().slice(17, 22)} UTC.` : "You are muted in this chat.");
+    if (socket.data.userId && Mod.globalBan(socket.data.userId)) return socket.emit("banned", { global: true });
     const result = checkMessage(String(text || ""), socket.data);
     if (result.blocked) return socket.emit("system", result.reason);
 
     const msg = {
-      id: Date.now() + Math.random().toString(36).slice(2, 6),
+      id: crypto.randomUUID(),
+      uid: socket.data.userId || null,
+      role: Mod.isStaff(socket.data.role) ? socket.data.role : undefined,
       name: socket.data.name,
       avatar: socket.data.avatar || null,
       text: result.text,
@@ -194,6 +228,62 @@ io.on("connection", (socket) => {
     };
     Messages.add(room, msg, socket.data.userId);
     io.to(room).emit("message", msg);
+  });
+
+  // ---------- Moderación (solo mods y admins) ----------
+  socket.on("mod", async (req, reply) => {
+    const done = (r) => typeof reply === "function" && reply(r);
+    try {
+      if (!Mod.isStaff(socket.data.role)) return done({ error: "Not allowed" });
+      const room = socket.data.room;
+      const { action, uid, name, messageId, minutes, reason } = req || {};
+
+      if (action === "delete") {
+        await Messages.remove(room, String(messageId));
+        io.to(room).emit("deleted", [String(messageId)]);
+        return done({ ok: true });
+      }
+
+      if (!uid) return done({ error: "This user can't be moderated (no account)." });
+      if (uid === socket.data.userId) return done({ error: "You can't moderate yourself." });
+      const targetRole = await Mod.roleOf(uid);
+      if (Mod.isStaff(targetRole) && socket.data.role !== "admin") return done({ error: "Only admins can moderate other moderators." });
+      if (targetRole === "admin") return done({ error: "You can't moderate an admin." });
+
+      const sockets = [...io.sockets.sockets.values()].filter((x) => x.data.userId === uid);
+      const by = socket.data.userId;
+
+      if (action === "mute") {
+        const mins = [5, 60, 1440].includes(minutes) ? minutes : 5;
+        await Mod.add({ userId: uid, username: name, roomId: room, kind: "mute", minutes: mins, reason, by });
+        const label = mins === 5 ? "5 minutes" : mins === 60 ? "1 hour" : "24 hours";
+        sockets.filter((x) => x.data.room === room).forEach((x) => x.emit("muted", { until: Date.now() + mins * 60e3, label }));
+        io.to(room).emit("notice", `🔇 ${name} was muted for ${label}.`);
+        return done({ ok: true });
+      }
+
+      if (action === "kick" || action === "ban" || action === "globalban") {
+        if (action === "ban") await Mod.add({ userId: uid, username: name, roomId: room, kind: "ban", reason, by });
+        if (action === "globalban") await Mod.add({ userId: uid, username: name, roomId: null, kind: "ban", reason, by });
+        const affected = sockets.filter((x) => action === "globalban" || x.data.room === room);
+        for (const x of affected) {
+          const r = x.data.room;
+          x.emit(action === "kick" ? "kicked" : "banned", { global: action === "globalban", reason });
+          if (r) { x.leave(r); x.data.room = null; io.to(r).emit("online", onlineCount(r)); }
+        }
+        // Al banear, borrar sus mensajes recientes de la sala
+        if (action !== "kick") {
+          const gone = Messages.removeByUser(room, uid);
+          if (gone.length) io.to(room).emit("deleted", gone);
+        }
+        const text = action === "kick" ? `👢 ${name} was removed from the chat.` : action === "ban" ? `🚫 ${name} was banned from this chat.` : `⛔ ${name} was banned from all chats.`;
+        io.to(room).emit("notice", text);
+        return done({ ok: true });
+      }
+      done({ error: "Unknown action" });
+    } catch (err) {
+      done({ error: err.message || "Something went wrong" });
+    }
   });
 
   // Reacciones flotantes (no se guardan como mensajes)

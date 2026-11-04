@@ -134,6 +134,40 @@
   .bn-emoji { position:absolute; right:18px; top:50%; transform:translateY(-58%); font-size:72px; filter:drop-shadow(0 8px 16px #0008); }
   .bn-poster { position:absolute; right:16px; top:50%; transform:translateY(-58%) rotate(3deg); height:62%; aspect-ratio:2/3; border-radius:10px; background-size:cover; background-position:center; box-shadow:0 10px 24px #000b; border:2px solid #ffffff30; }
 
+  /* Moderación */
+  .mod-btn { opacity:0; background:none; border:0; color:var(--muted); font-size:18px; line-height:1; padding:2px 6px; border-radius:8px; cursor:pointer; align-self:flex-start; }
+  .msg:hover .mod-btn, .mod-btn:focus { opacity:1; }
+  @media (hover:none) { .mod-btn { opacity:.6; } }
+  .mod-btn:hover { background:#ffffff14; color:var(--text); }
+  .staff { font-size:10px; font-weight:800; padding:1px 6px; border-radius:999px; background:#2ecc7122; color:#2ecc71; border:1px solid #2ecc7155; }
+  .sheet { position:fixed; inset:0; background:#000a; z-index:30; display:flex; align-items:flex-end; justify-content:center; }
+  @media (min-width:600px) { .sheet { align-items:center; } }
+  .sheet-box { width:100%; max-width:400px; background:var(--panel); border:1px solid var(--line); border-radius:20px 20px 0 0; padding:18px 14px calc(14px + env(safe-area-inset-bottom)); animation:sheetUp .2s ease-out; }
+  @media (min-width:600px) { .sheet-box { border-radius:20px; } }
+  @keyframes sheetUp { from { transform:translateY(30px); opacity:0; } }
+  .sheet-box h3 { margin:0 0 2px; font-size:18px; }
+  .sheet-box .q { color:var(--muted); font-size:13px; margin:0 0 12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sheet-box button { width:100%; display:flex; align-items:center; gap:10px; text-align:left; background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px; cursor:pointer; font-weight:600; }
+  .sheet-box button:hover { border-color:var(--muted); }
+  .sheet-box .row3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .sheet-box .row3 button { justify-content:center; margin:0 0 8px; }
+  .sheet-box .danger { color:#ff7675; border-color:#ff767555; }
+  .sheet-box .danger.big { background:#ff47571a; }
+  .sheet-box .cancel { justify-content:center; background:none; }
+  .sheet-box .lbl { font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin:6px 2px 8px; }
+  .muted-bar { margin:10px 12px calc(10px + env(safe-area-inset-bottom)); padding:14px 16px; border-radius:16px; border:1px solid #ffb34755; background:#ffb3471a; color:#ffb347; text-align:center; font-weight:600; }
+  .blocked { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:8px; padding:30px; }
+  .blocked .big { font-size:52px; }
+  .blocked b { font-size:20px; }
+  .blocked span { color:var(--muted); }
+  .mod-list { display:grid; gap:10px; }
+  .mod-item { display:flex; gap:12px; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
+  .mod-item .body { flex:1; min-width:0; }
+  .mod-item .body small { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+  .mod-item .k { font-size:22px; }
+  .lift { background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:7px 12px; cursor:pointer; font-weight:700; font-size:13px; }
+  .lift:hover { border-color:#2ecc71; color:#2ecc71; }
+
   /* My Chats */
   .mychats-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; border:1px solid var(--line); font-weight:700; font-size:14px; white-space:nowrap; }
   .mychats-btn:hover, .mychats-btn.on { border-color:#fdcb6e; color:#fdcb6e; }
@@ -202,6 +236,7 @@
   .txt { line-height:1.45; word-wrap:break-word; overflow-wrap:anywhere; color:#dcdce4; }
   .txt .at { color:var(--accent); font-weight:700; }
   .sys { margin:8px auto; width:fit-content; max-width:90%; color:#ffb347; background:#ffb3471a; border:1px solid #ffb34740; font-size:13px; padding:6px 12px; border-radius:999px; text-align:center; animation:msgIn .2s; }
+  .sys.notice { color:var(--muted); background:var(--panel); border-color:var(--line); }
   .first { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:var(--muted); text-align:center; }
   .first .big { font-size:44px; margin-bottom:6px; animation:bob 2.4s ease-in-out infinite; }
   .first b { color:var(--text); font-size:17px; }
@@ -281,6 +316,7 @@ const hdr = document.getElementById("hdr");
 let socket = null, genres = [], timer = null;
 let cfg = { auth:false }, sb = null, session = null, me = null;
 let favs = new Set(); // salas guardadas en My Chats
+const isStaff = () => me?.role === "mod" || me?.role === "admin";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const colorFor = (name) => `hsl(${[...name].reduce((a,c)=>a+c.charCodeAt(0),0)*47%360} 80% 70%)`;
@@ -407,9 +443,10 @@ function header(active) {
     if (old) return old.remove();
     const m = document.createElement("div");
     m.className = "menu";
-    m.innerHTML = `<div>@${esc(me.username)}</div><button id="out">Sign out</button>`;
+    m.innerHTML = `<div>@${esc(me.username)}${isStaff() ? ` · <span class="staff">${me.role.toUpperCase()}</span>` : ""}</div>${isStaff() ? `<button id="modLink">🛡️ Moderation</button>` : ""}<button id="out">Sign out</button>`;
     document.body.appendChild(m);
     m.querySelector("#out").onclick = () => { m.remove(); logout(); };
+    m.querySelector("#modLink")?.addEventListener("click", () => { m.remove(); location.hash = "#/mod"; });
     setTimeout(() => document.addEventListener("click", () => m.remove(), { once:true }));
   });
 }
@@ -426,6 +463,7 @@ function route() {
   if ((m = h.match(/^#\/room\/(.+)$/))) return showRoom(decodeURIComponent(m[1]));
   if (h === "#/categories") return showCategories();
   if (h === "#/mychats") return showMyChats();
+  if (h === "#/mod") return showModPanel();
   if (h === "#/calendar") return showCalendar(null);
   if ((m = h.match(/^#\/g\/([^/]+)\/calendar$/))) return showCalendar(m[1]);
   if ((m = h.match(/^#\/g\/([^/]+)$/))) return showGenre(m[1]);
@@ -541,6 +579,62 @@ async function showMyChats() {
     showMyChats();
   };
   header("my");
+}
+
+// ---------- Moderación ----------
+function openModSheet(m) {
+  const div = document.createElement("div");
+  div.className = "sheet";
+  const acct = Boolean(m.uid);
+  div.innerHTML = `<div class="sheet-box">
+    <h3>🛡️ ${esc(m.name)}</h3><p class="q">“${esc(m.text)}”</p>
+    <button data-a="delete">🗑️ Delete this message</button>
+    ${acct ? `<div class="lbl">Mute in this chat</div>
+    <div class="row3"><button data-a="mute" data-m="5">5 min</button><button data-a="mute" data-m="60">1 hour</button><button data-a="mute" data-m="1440">24 hours</button></div>
+    <button data-a="kick">👢 Remove from this chat</button>
+    <button class="danger" data-a="ban">🚫 Remove & ban from this chat</button>
+    <button class="danger big" data-a="globalban">⛔ Remove & ban from ALL chats</button>` : `<p class="q">This person has no account, so only their message can be deleted.</p>`}
+    <button class="cancel" data-a="cancel">Cancel</button></div>`;
+  document.body.appendChild(div);
+  div.onclick = (e) => {
+    if (e.target === div) return div.remove();
+    const btn = e.target.closest("[data-a]");
+    if (!btn) return;
+    const action = btn.dataset.a;
+    if (action === "cancel") return div.remove();
+    let reason = null;
+    if (action === "ban" || action === "globalban") {
+      const where = action === "ban" ? "this chat" : "ALL chats";
+      if (!confirm(`Ban ${m.name} from ${where}?`)) return;
+      reason = prompt("Reason (optional):", "") || null;
+    }
+    socket?.emit("mod", { action, uid: m.uid || null, name: m.name, messageId: m.id, minutes: +btn.dataset.m || undefined, reason }, (r) => {
+      if (r?.error) alert(r.error);
+    });
+    div.remove();
+  };
+}
+
+async function showModPanel() {
+  header("");
+  if (!isStaff()) return (location.hash = "#/");
+  app.innerHTML = `<main><h1>🛡️ Moderation</h1><p class="sub">People who are muted or banned right now.</p><div id="ml"><div class="empty">Loading…</div></div></main>`;
+  const r = await fetch("/api/mod/actions", { headers: authHeader() });
+  const list = r.ok ? await r.json() : [];
+  const icon = (a) => a.kind === "mute" ? "🔇" : a.room_id ? "🚫" : "⛔";
+  const what = (a) => a.kind === "mute" ? `Muted in ${esc(a.room_title)}` : a.room_id ? `Banned from ${esc(a.room_title)}` : "Banned from all chats";
+  const until = (a) => a.until ? `until ${new Date(a.until).toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}` : "permanent";
+  document.getElementById("ml").innerHTML = list.length ? `<div class="mod-list">${list.map((a) => `
+    <div class="mod-item"><div class="k">${icon(a)}</div>
+      <div class="body"><b>${esc(a.username || "Unknown")}</b><small>${what(a)} · ${until(a)}${a.reason ? ` · “${esc(a.reason)}”` : ""}</small></div>
+      <button class="lift" data-id="${a.id}">${a.kind === "mute" ? "Unmute" : "Unban"}</button></div>`).join("")}</div>`
+    : `<div class="empty">Nobody is muted or banned. 🎉</div>`;
+  document.getElementById("ml").onclick = async (e) => {
+    const id = e.target.closest(".lift")?.dataset.id;
+    if (!id) return;
+    await fetch("/api/mod/actions/" + id, { method: "DELETE", headers: authHeader() });
+    showModPanel();
+  };
 }
 
 // ---------- Categorías ----------
@@ -721,9 +815,10 @@ async function showRoom(id) {
     const mine = myName && m.name === myName;
     const mention = myName && !mine && new RegExp(`@${myName}\\b`, "i").test(m.text);
     const text = esc(m.text).replace(/@([A-Za-z0-9_]{3,20})/g, '<span class="at">@$1</span>');
-    return `<div class="msg ${grouped ? "grouped" : ""} ${mine ? "mine" : ""} ${mention ? "mention" : ""}">
+    return `<div class="msg ${grouped ? "grouped" : ""} ${mine ? "mine" : ""} ${mention ? "mention" : ""}" data-id="${esc(m.id)}" data-uid="${esc(m.uid || "")}" data-name="${esc(m.name)}">
       ${grouped ? `<div class="av-space"></div>` : avatarHtml(m)}
-      <div class="bubble">${grouped ? "" : `<div class="who"><b style="color:${colorFor(m.name)}">${esc(m.name)}</b><time>${timeOf(m.at)}</time></div>`}<div class="txt">${text}</div></div>
+      <div class="bubble">${grouped ? "" : `<div class="who"><b style="color:${colorFor(m.name)}">${esc(m.name)}</b>${m.role ? `<span class="staff">${m.role === "admin" ? "ADMIN" : "MOD"}</span>` : ""}<time>${timeOf(m.at)}</time></div>`}<div class="txt">${text}</div></div>
+      ${isStaff() && !mine ? `<button class="mod-btn" aria-label="Moderate">⋯</button>` : ""}
     </div>`;
   };
   const add = (html, force) => {
@@ -748,10 +843,17 @@ async function showRoom(id) {
     el.addEventListener("animationend", () => el.remove());
   };
 
-  const drawComposer = (canWrite, name) => {
+  const drawComposer = (canWrite, name, mutedUntil) => {
     const c = document.getElementById("composer");
     if (!c) return;
     myName = name;
+    if (mutedUntil && new Date(mutedUntil) > Date.now()) {
+      const until = new Date(mutedUntil);
+      c.innerHTML = `<div class="muted-bar">🔇 You are muted until ${until.toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" })}. You can still read the chat.</div>`;
+      clearTimeout(c._t);
+      c._t = setTimeout(() => drawComposer(canWrite, name), until - Date.now() + 1000);
+      return;
+    }
     if (!canWrite) {
       c.innerHTML = `<div class="join-card"><div><b>Join the conversation</b><span>Create a free account to chat and react.</span></div>
         <button class="btn" id="joinBtn">Sign up</button></div>`;
@@ -801,7 +903,26 @@ async function showRoom(id) {
 
   socket = io();
   socket.on("connect", () => socket.emit("join", { roomId: id, name: guestName, token: session?.access_token }));
-  socket.on("joined", ({ canWrite, name }) => drawComposer(canWrite, name));
+  socket.on("joined", ({ canWrite, name, mutedUntil }) => drawComposer(canWrite, name, mutedUntil));
+  socket.on("muted", ({ until }) => drawComposer(true, myName, until));
+  socket.on("deleted", (ids) => ids.forEach((mid) => msgs.querySelector(`.msg[data-id="${CSS.escape(mid)}"]`)?.remove()));
+  const blockScreen = (icon, title, sub) => {
+    socket.disconnect();
+    const area = document.querySelector(".chat-area"), comp = document.getElementById("composer");
+    if (area) area.innerHTML = `<div class="blocked"><div class="big">${icon}</div><b>${title}</b><span>${sub}</span><a class="btn" href="#/" style="margin-top:10px">Go to home</a></div>`;
+    if (comp) comp.innerHTML = "";
+  };
+  socket.on("kicked", () => blockScreen("👢", "You were removed from this chat", "A moderator removed you. You can join again later."));
+  socket.on("banned", ({ global, reason }) => blockScreen(global ? "⛔" : "🚫",
+    global ? "You are banned from Rugo chats" : "You are banned from this chat",
+    (reason ? `Reason: ${esc(reason)}. ` : "") + (global ? "You can't join any chat." : "You can still join other chats.")));
+  // Menú de moderador al tocar ⋯ en un mensaje
+  msgs.addEventListener("click", (e) => {
+    const b = e.target.closest(".mod-btn");
+    if (!b) return;
+    const row = b.closest(".msg");
+    openModSheet({ id: row.dataset.id, uid: row.dataset.uid, name: row.dataset.name, text: row.querySelector(".txt")?.textContent || "" });
+  });
   socket.on("history", (list) => {
     lastName = null;
     msgs.innerHTML = list.map(msgHtml).join("") || `<div class="first"><div class="big">💬</div><b>No messages yet</b><span>Be the first to say something!</span></div>`;
@@ -809,6 +930,7 @@ async function showRoom(id) {
   });
   socket.on("message", (m) => add(msgHtml(m), myName && m.name === myName));
   socket.on("system", (t) => { if (t) { lastName = null; add(`<div class="sys">⚠️ ${esc(t)}</div>`, true); } });
+  socket.on("notice", (t) => { lastName = null; add(`<div class="sys notice">${esc(t)}</div>`, true); });
   socket.on("react", floatEmoji);
   socket.on("online", (n) => { const o = document.getElementById("online"); if (o) o.innerHTML = `<span class="dot green"></span>${n}`; });
 }

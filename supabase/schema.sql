@@ -48,3 +48,28 @@ create index if not exists messages_room_time on public.messages (room_id, creat
 create index if not exists messages_time on public.messages (created_at);
 alter table public.messages enable row level security;
 grant select, insert, delete on public.messages to service_role;
+
+-- ============ Moderación ============
+-- Rol de cada cuenta: user, mod o admin
+alter table public.profiles add column if not exists role text not null default 'user'
+  check (role in ('user', 'mod', 'admin'));
+
+-- Silenciados y baneados (room_id vacío = baneado de todos los chats)
+create table if not exists public.moderation (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  username text,
+  room_id text,
+  kind text not null check (kind in ('mute', 'ban')),
+  until timestamptz,
+  reason text,
+  created_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create index if not exists moderation_user on public.moderation (user_id);
+alter table public.moderation enable row level security;
+grant select, insert, update, delete on public.moderation to service_role;
+
+-- Identificador de cada mensaje (para poder borrarlos)
+alter table public.messages add column if not exists mid text;
+create index if not exists messages_mid on public.messages (mid);
