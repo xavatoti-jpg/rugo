@@ -12,7 +12,12 @@ const server = http.createServer(app);
 const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static(path.join(__dirname, "public")));
+// Que el navegador (sobre todo Safari en iPhone) siempre busque la versión más nueva de la página
+app.use(express.static(path.join(__dirname, "public"), {
+  setHeaders: (res, file) => {
+    if (file.endsWith(".html")) res.setHeader("Cache-Control", "no-cache, must-revalidate");
+  },
+}));
 // Librería de Supabase para el navegador (servida desde nuestro propio servidor)
 app.use("/vendor", express.static(path.join(__dirname, "node_modules/@supabase/supabase-js/dist/umd")));
 Auth.routes(app);
@@ -111,6 +116,15 @@ app.get("/api/movies", (req, res) => {
   const list = Movies.inRegion(region).map((m) => ({ ...m, online: onlineCount(m.id) }))
     .sort((a, b) => b.online - a.online || (b.releaseDate || "").localeCompare(a.releaseDate || ""));
   res.json({ region, regions: Movies.REGIONS, ...Movies.status(), movies: list });
+});
+
+// Próximos eventos (para la portada cuando no hay nada en vivo)
+app.get("/api/next", (req, res) => {
+  const list = Events.allEvents()
+    .filter((e) => e.state === "upcoming" && !e.allDay && new Date(e.start) - Date.now() < 24 * 3600e3)
+    .slice(0, 5)
+    .map(withOnline);
+  res.json(list);
 });
 
 // Eventos de una categoría: ?genre=deportes
