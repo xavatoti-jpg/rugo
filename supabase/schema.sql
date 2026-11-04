@@ -91,3 +91,21 @@ grant update on public.messages to service_role;
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('avatars', 'avatars', true, 512000, array['image/jpeg', 'image/png', 'image/webp'])
 on conflict (id) do nothing;
+
+-- ============ Chats creados por usuarios ============
+create table if not exists public.user_chats (
+  id text primary key,
+  code text not null unique,
+  name text not null,
+  genre text not null,
+  topic text,
+  is_public boolean not null default true,
+  owner uuid references auth.users (id) on delete cascade,
+  owner_name text,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  closed_at timestamptz
+);
+create index if not exists user_chats_owner on public.user_chats (owner);
+alter table public.user_chats enable row level security;
+grant select, insert, update, delete on public.user_chats to service_role;

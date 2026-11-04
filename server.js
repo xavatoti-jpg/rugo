@@ -44,7 +44,7 @@ Events.start();
 // ---------------------------------------------------------------
 const Messages = require("./messages");
 // Limpieza cada hora: mensajes de más de 7 días y salas que ya cerraron
-setInterval(() => Messages.cleanup(new Set(Events.allEvents().map((e) => e.id))).catch(() => {}), 3600e3);
+setInterval(() => Messages.cleanup({ has: (id) => Boolean(Events.findRoom(id)) }).catch(() => {}), 3600e3);
 
 function onlineCount(roomId) {
   return io.sockets.adapter.rooms.get(roomId)?.size || 0;
@@ -56,10 +56,11 @@ const withOnline = (e) => ({ ...e, online: onlineCount(e.id) });
 app.get("/api/genres", (req, res) => {
   const events = Events.allEvents();
   res.json(Events.GENRES.map((g) => {
-    const live = events.filter((e) => e.genre === g.id && e.state === "live" && !e.always && !e.ongoing);
+    const live = events.filter((e) => e.genre === g.id && e.state === "live" && !e.always && !e.ongoing && !e.custom);
+    const community = events.filter((e) => e.genre === g.id && e.custom).length;
     const showing = events.filter((e) => e.genre === g.id && e.ongoing).length;
     const online = events.filter((e) => e.genre === g.id).reduce((n, e) => n + onlineCount(e.id), 0);
-    return { ...g, live: live.length, showing, online };
+    return { ...g, live: live.length, showing, community, online };
   }));
 });
 
@@ -69,7 +70,7 @@ app.get("/api/live", (req, res) => {
     .map(withOnline)
     // En vivo + juegos que acaban de terminar (post-game, 2 horas).
     // Salas fijas (charla general, películas) solo salen si hay gente adentro.
-    .filter((e) => (e.state === "live" && !e.always && !e.ongoing) || e.state === "post" || ((e.always || e.ongoing) && e.online > 0))
+    .filter((e) => (e.state === "live" && !e.always && !e.ongoing && !e.custom) || e.state === "post" || ((e.always || e.ongoing || e.custom) && e.online > 0))
     // Orden: primero lo que está en vivo (más gente primero), después los que terminaron
     .sort((a, b) => (a.state === "post") - (b.state === "post") || b.online - a.online || new Date(b.start) - new Date(a.start));
   res.json(list);
@@ -90,9 +91,8 @@ app.get("/api/favorites", async (req, res) => {
   const { data, error } = await Auth.admin.from("favorites").select("room_id, title, genre, start_at, created_at")
     .eq("user_id", me.user.id).order("created_at", { ascending: false });
   if (error) { console.error("Favorites load failed:", error.code, error.message); return res.status(500).json({ error: "Could not load your chats" }); }
-  const now = new Map(Events.allEvents().map((e) => [e.id, e]));
   res.json(data.map((f) => {
-    const e = now.get(f.room_id);
+    const e = Events.findRoom(f.room_id);
     // Si el evento ya no existe, terminó
     return e ? { ...withOnline(e), saved: true } : { id: f.room_id, title: f.title, genre: f.genre, start: f.start_at, state: "done", saved: true, online: 0 };
   }));
@@ -101,7 +101,7 @@ app.get("/api/favorites", async (req, res) => {
 app.post("/api/favorites/:roomId", async (req, res) => {
   const me = await signedIn(req, res);
   if (!me) return;
-  const e = Events.allEvents().find((x) => x.id === req.params.roomId);
+  const e = Events.findRoom(req.params.roomId);
   if (!e) return res.status(404).json({ error: "Room not found" });
   const { count } = await Auth.admin.from("favorites").select("*", { count: "exact", head: true }).eq("user_id", me.user.id);
   if (count >= 100) return res.status(400).json({ error: "You can save up to 100 chats." });
@@ -121,12 +121,61 @@ app.delete("/api/favorites/:roomId", async (req, res) => {
   res.json({ saved: false });
 });
 
+// ---------- Chats creados por usuarios ----------
+const Chats = require("./chats");
+const createdAt = new Map();
+app.post("/api/chats", express.json(), async (req, res) => {
+  const me = await signedIn(req, res);
+  if (!me) return;
+  if (!me.profile?.username) return res.status(400).json({ error: "Pick a username first." });
+  if (Mod.globalBan(me.user.id)) return res.status(403).json({ error: "Your account can't create chats." });
+  if (Date.now() - (createdAt.get(me.user.id) || 0) < 20000) return res.status(429).json({ error: "Please wait a few seconds before creating another chat." });
+  try {
+    const { name, genre, topic, isPublic, code } = req.body || {};
+    const chat = await Chats.create({ name, genre, topic, isPublic, code, owner: me.user.id, ownerName: me.profile.username });
+    createdAt.set(me.user.id, Date.now());
+    res.json(chat);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Código nuevo al azar (para el formulario)
+app.get("/api/chats/new-code", (req, res) => {
+  let code;
+  do code = Chats.randomCode(); while (Chats.byCode(code));
+  res.json({ code });
+});
+
+// Entrar con código
+app.get("/api/chats/code/:code", (req, res) => {
+  const c = Chats.byCode(req.params.code);
+  if (!c) return res.status(404).json({ error: "No chat found with that code. Check it and try again." });
+  res.json({ id: c.id });
+});
+
+app.get("/api/chats/mine", async (req, res) => {
+  const me = await signedIn(req, res);
+  if (!me) return;
+  res.json(Chats.mine(me.user.id).map(withOnline));
+});
+
+// Cerrar un chat (su dueño o un moderador)
+app.delete("/api/chats/:id", async (req, res) => {
+  const me = await signedIn(req, res);
+  if (!me) return;
+  if (Chats.owner(req.params.id) !== me.user.id && !Mod.isStaff(me.profile?.role)) return res.status(403).json({ error: "Only the creator can close this chat." });
+  await Chats.close(req.params.id);
+  io.to(req.params.id).emit("closed");
+  res.json({ ok: true });
+});
+
 // ---------- Panel de moderación ----------
 app.get("/api/mod/actions", async (req, res) => {
   const me = await signedIn(req, res);
   if (!me) return;
   if (!Mod.isStaff(me.profile?.role)) return res.status(403).json({ error: "Not allowed" });
-  const titles = new Map(Events.allEvents().map((e) => [e.id, e.title]));
+  const titles = { get: (id) => Events.findRoom(id)?.title };
   res.json(Mod.list().map((a) => ({ ...a, room_title: a.room_id ? titles.get(a.room_id) || "(ended chat)" : null })));
 });
 
@@ -163,7 +212,7 @@ app.get("/api/events", (req, res) => {
 });
 
 app.get("/api/events/:id", (req, res) => {
-  const e = Events.allEvents().find((x) => x.id === req.params.id);
+  const e = Events.findRoom(req.params.id);
   if (!e) return res.status(404).json({ error: "No encontrado" });
   res.json(withOnline(e));
 });
@@ -177,7 +226,7 @@ io.on("connection", (socket) => {
   socket.data.mutedUntil = 0;
 
   socket.on("join", async ({ roomId, name, token }) => {
-    if (!Events.allEvents().some((e) => e.id === roomId)) return;
+    if (!Events.findRoom(roomId)) return;
     socket.data.name = null;
 
     if (Auth.enabled) {
@@ -245,9 +294,12 @@ io.on("connection", (socket) => {
   socket.on("mod", async (req, reply) => {
     const done = (r) => typeof reply === "function" && reply(r);
     try {
-      if (!Mod.isStaff(socket.data.role)) return done({ error: "Not allowed" });
       const room = socket.data.room;
       const { action, uid, name, messageId, minutes, reason } = req || {};
+      // Quien creó el chat puede borrar, silenciar, sacar y banear en SU chat
+      const isOwner = socket.data.userId && Chats.owner(room) === socket.data.userId;
+      const ownerOk = isOwner && ["delete", "mute", "kick", "ban"].includes(action);
+      if (!Mod.isStaff(socket.data.role) && !ownerOk) return done({ error: "Not allowed" });
 
       if (action === "delete") {
         await Messages.remove(room, String(messageId));
@@ -259,6 +311,7 @@ io.on("connection", (socket) => {
       if (uid === socket.data.userId) return done({ error: "You can't moderate yourself." });
       const targetRole = await Mod.roleOf(uid);
       if (Mod.isStaff(targetRole) && socket.data.role !== "admin") return done({ error: "Only admins can moderate other moderators." });
+      if (Chats.owner(room) === uid && !Mod.isStaff(socket.data.role)) return done({ error: "You can't moderate the chat's creator." });
       if (targetRole === "admin") return done({ error: "You can't moderate an admin." });
 
       const sockets = [...io.sockets.sockets.values()].filter((x) => x.data.userId === uid);

@@ -1,6 +1,7 @@
 // Eventos y categorías de Rugo
 const fs = require("fs");
 const Movies = require("./movies");
+const Chats = require("./chats");
 const path = require("path");
 
 // Categorías principales (lo primero que ve el usuario)
@@ -11,6 +12,7 @@ const GENRES = [
   { id: "gaming", name: "Gaming", emoji: "🎮", color: "#6c5ce7" },
   { id: "music", name: "Music", emoji: "🎵", color: "#00b894" },
   { id: "shows", name: "Awards & Shows", emoji: "🏆", color: "#fdcb6e" },
+  { id: "other", name: "Everything Else", emoji: "✨", color: "#54a0ff" },
 ];
 
 // Ligas de ESPN (API pública, sin clave). Se pueden añadir más.
@@ -187,9 +189,9 @@ function withPostgame(e) {
 function allEvents() {
   const sports = (usingSamples ? sampleEvents() : dedupe(Object.values(sportsByDay).flat())).map(withPostgame);
   const limit = Date.now() + (DAYS_AHEAD + 1) * 86400e3;
-  return [...generalRooms(), ...specialEvents(), ...Movies.asEvents(), ...sports]
+  return [...generalRooms(), ...specialEvents(), ...Movies.asEvents(), ...Chats.publicEvents(), ...sports]
     // Los especiales (Oscars, etc.) salen aunque falten semanas; los partidos, solo 7 días
-    .filter((e) => e.state !== "done" && (e.special || new Date(e.start).getTime() < limit))
+    .filter((e) => e.state !== "done" && (e.special || e.custom || new Date(e.start).getTime() < limit))
     .sort((a, b) => new Date(a.start) - new Date(b.start));
 }
 
@@ -199,11 +201,17 @@ function dedupe(list) {
   return [...seen.values()];
 }
 
+// Buscar una sala por id (incluye los chats privados, que no salen en las listas)
+function findRoom(id) {
+  return allEvents().find((e) => e.id === id) || Chats.get(id);
+}
+
 function start() {
   Movies.start();
+  Chats.start();
   refreshLive().then(refreshCalendar);
   setInterval(refreshLive, 2 * 60 * 1000); // cada 2 minutos
   setInterval(refreshCalendar, 60 * 60 * 1000); // cada hora
 }
 
-module.exports = { GENRES, allEvents, start };
+module.exports = { GENRES, allEvents, findRoom, start };

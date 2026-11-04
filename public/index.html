@@ -249,6 +249,71 @@
   .big-row .body b { display:block; }
   .big-row .body small { color:var(--muted); font-size:13px; }
 
+  /* Categorías con banners */
+  .page-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
+  .page-head .sub { margin:0; }
+  .create-btn { flex-shrink:0; padding:10px 16px; border-radius:999px; background:var(--accent); color:#fff; font-weight:800; font-size:14px; box-shadow:0 6px 18px #9b5cff44; white-space:nowrap; }
+  .create-btn:hover { transform:translateY(-1px); }
+  .create-tab { color:#c4a8ff; }
+  .cat-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; margin-bottom:26px; }
+  @media (min-width:720px) { .cat-grid { grid-template-columns:repeat(3, 1fr); gap:16px; } }
+  @media (min-width:960px) { #g.cat-grid { grid-template-columns:repeat(4, 1fr); } }
+  .create-tile { border:2px dashed #9b5cff88; }
+  .create-tile .cb-emoji { font-weight:900; color:#fff; right:8%; top:2%; transform:none; font-size:min(26vw, 110px); }
+  .cat-banner { position:relative; display:flex; flex-direction:column; justify-content:flex-end; aspect-ratio:1 / 1; border-radius:20px; overflow:hidden; isolation:isolate; padding:14px; border:1px solid #ffffff14; box-shadow:0 8px 24px #0006; transition:transform .2s, box-shadow .2s; }
+  @media (min-width:720px) { .cat-banner { aspect-ratio:16 / 10; padding:18px; } }
+  .cat-banner:hover { transform:translateY(-3px); box-shadow:0 14px 34px #000a; }
+  .cb-bg { position:absolute; inset:0; z-index:-2; background:var(--c); background:radial-gradient(120% 90% at 85% 15%, color-mix(in srgb, var(--c) 95%, #fff 5%) 0%, color-mix(in srgb, var(--c) 70%, #000) 55%, color-mix(in srgb, var(--c) 30%, #000) 100%); }
+  .cb-bg::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, #0000 40%, #000a 100%); }
+  .cb-emoji { position:absolute; z-index:-1; right:-6%; top:-4%; font-size:min(30vw, 120px); line-height:1; transform:rotate(-12deg); filter:drop-shadow(0 10px 18px #0007); transition:transform .3s; }
+  @media (min-width:720px) { .cb-emoji { font-size:120px; right:4%; top:6%; } }
+  .cat-banner:hover .cb-emoji { transform:rotate(-4deg) scale(1.06); }
+  .cb-body b { display:block; font-size:19px; font-weight:900; text-shadow:0 2px 10px #0008; line-height:1.15; color:#fff; }
+  @media (min-width:720px) { .cb-body b { font-size:24px; } }
+  .cb-body small { display:block; margin-top:4px; font-size:12px; font-weight:600; color:#ffffffcc; }
+  .cb-body small .badge-live { color:#fff; }
+  .cb-cta { position:absolute; top:12px; left:14px; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; padding:4px 10px; border-radius:999px; background:#0007; backdrop-filter:blur(6px); opacity:0; transform:translateY(-4px); transition:.2s; color:#fff; }
+  .cat-banner:hover .cb-cta { opacity:1; transform:none; }
+  @media (hover:none) { .cb-cta { display:none; } }
+  .genre-hero { position:relative; display:flex; align-items:center; gap:16px; padding:18px; border-radius:22px; margin-bottom:16px; overflow:hidden; border:1px solid #ffffff14; background:var(--panel); background:linear-gradient(120deg, color-mix(in srgb, var(--c) 55%, #000) 0%, var(--panel) 85%); }
+  .genre-hero h1 { margin:2px 0; font-size:28px; }
+  .gh-emoji { font-size:56px; filter:drop-shadow(0 8px 14px #0008); }
+  .crumb { font-size:13px; color:#ffffffb0; font-weight:600; }
+  .crumb:hover { color:#fff; }
+  .banners .banner { height:190px; }
+  /* Crear chat */
+  .big-seg { display:flex; width:100%; margin-bottom:16px; }
+  .big-seg button { flex:1; padding:10px; font-size:14px; }
+  .form-card { padding:18px 16px; }
+  .fh { margin:0 0 4px; font-size:20px; text-transform:none; letter-spacing:0; color:var(--text); }
+  .fl { display:block; font-weight:700; font-size:14px; margin:16px 0 8px; }
+  .fl small { color:var(--muted); font-weight:500; }
+  .fl:first-child { margin-top:0; }
+  .gpick { display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; }
+  @media (min-width:560px) { .gpick { grid-template-columns:repeat(3, 1fr); } }
+  .gpick button { display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-weight:700; font-size:13px; text-align:left; }
+  .gpick button span { font-size:20px; }
+  .gpick button.on { border-color:var(--c); background:color-mix(in srgb, var(--c) 22%, var(--panel2)); box-shadow:0 0 0 2px color-mix(in srgb, var(--c) 45%, transparent); }
+  .privacy { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .privacy button { text-align:left; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--panel2); cursor:pointer; }
+  .privacy button b { display:block; font-size:14px; }
+  .privacy button small { display:block; color:var(--muted); font-size:12px; margin-top:3px; line-height:1.35; }
+  .privacy button.on { border-color:var(--accent); box-shadow:0 0 0 2px #9b5cff44; }
+  .code-row { display:flex; gap:8px; }
+  .code-input { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:20px !important; font-weight:800; letter-spacing:.18em; text-transform:uppercase; text-align:center; }
+  .hint { display:block; color:var(--muted); font-size:12px; margin-top:6px; }
+  .created { text-align:center; }
+  .created .big-emoji { font-size:52px; }
+  .created h1 { margin:6px 0 2px; }
+  .code-show { display:inline-flex; flex-direction:column; align-items:center; padding:10px 22px; border-radius:16px; border:1px dashed #9b5cff88; background:#9b5cff14; margin:10px 0 14px; }
+  .code-show small { font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .code-show b { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:30px; letter-spacing:.2em; color:#c4a8ff; }
+  .link-row { display:flex; gap:8px; margin-bottom:12px; }
+  .link-row input { font-size:13px; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .two .btn { text-align:center; }
+  .btn.ghost { background:var(--panel2); border:1px solid var(--line); color:var(--text); }
+
   /* Settings */
   .gear { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; border:1px solid var(--line); background:none; cursor:pointer; flex-shrink:0; color:var(--muted); }
   .gear:hover, .gear.on { color:var(--text); border-color:var(--muted); }
@@ -593,7 +658,7 @@ function header(active) {
   }
   const gear = `<a class="gear ${active === "set" ? "on" : ""}" href="#/settings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>`;
   hdr.innerHTML = `<a class="logo" href="#/" aria-label="Rugo home"><img src="/brand/rugo-mark.svg" alt="" width="34" height="34"><span class="wm-wrap"><span class="wm">Rug<b>o</b></span><small class="tagline">live chat for <i>anything</i></small></span></a>
-    <nav class="nav">${tab("#/categories", "Categories", "cat")}${tab("#/calendar", "Calendar", "cal")}${gear.replace('class="gear', 'class="gear g-mob')}</nav>
+    <nav class="nav">${tab("#/categories", "Categories", "cat")}${tab("#/calendar", "Calendar", "cal")}<a class="tab create-tab ${active === "create" ? "on" : ""}" href="#/create">＋ Create</a>${gear.replace('class="gear', 'class="gear g-mob')}</nav>
     <div class="spacer"></div><div class="auth">${right}${gear.replace('class="gear', 'class="gear g-desk')}</div>`;
   document.getElementById("signinBtn")?.addEventListener("click", () => openLogin("signin"));
   document.getElementById("signupBtn")?.addEventListener("click", () => openLogin("signup"));
@@ -623,6 +688,9 @@ function route() {
   let m;
   if ((m = h.match(/^#\/room\/(.+)$/))) return showRoom(decodeURIComponent(m[1]));
   if (h === "#/categories") return showCategories();
+  if (h.startsWith("#/create")) return showCreate(new URLSearchParams(h.split("?")[1] || ""));
+  if ((m = h.match(/^#\/c\/([A-Za-z0-9]+)$/))) return openByCode(m[1]);
+  if ((m = h.match(/^#\/g\/([^/]+)\/s\/(.+)$/))) return showSub(m[1], decodeURIComponent(m[2]));
   if (h === "#/mychats") return showMyChats();
   if (h === "#/mod") return showModPanel();
   if (h === "#/settings") return showSettings();
@@ -737,6 +805,7 @@ function banner(e, hero, trending) {
   const g = genreById(e.genre);
   const tag = e.state === "upcoming" ? `<span class="bn-tag">⏰ ${esc(new Date(e.start).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" }))}</span>`
     : e.always ? `<span class="bn-tag">💬 ALWAYS OPEN</span>`
+    : e.custom ? `<span class="bn-tag">${e.isPublic ? "💬 COMMUNITY" : "🔒 PRIVATE"}</span>`
     : e.ongoing ? `<span class="bn-tag">🍿 IN THEATERS</span>`
     : e.state === "post" ? `<span class="bn-tag final">🏁 FINAL</span>`
     : `<span class="bn-tag live"><span class="dot"></span>LIVE</span>`;
@@ -774,7 +843,7 @@ function liveCard(e, rank) {
   return `<a class="live-card ${e.always ? "general" : ""} ${rank && rank <= 3 && e.online > 0 ? "hot" : ""}" href="#/room/${encodeURIComponent(e.id)}">
     ${rank ? `<div class="rank">${rank}</div>` : ""}
     <div class="body">
-      <div class="top">${e.always ? "💬 Always open" : e.ongoing ? "🍿 In theaters" : e.state === "post" ? `<span class="final">🏁 FINAL</span>` : `<span class="badge-live"><span class="dot"></span>LIVE</span>`}${g && rank && !e.ongoing ? `<span>${g.emoji}</span>` : ""}<span>${esc(e.always || e.ongoing ? "" : e.league)}</span>${e.detail ? `<span>· ${esc(e.detail)}</span>` : ""}</div>
+      <div class="top">${e.always ? "💬 Always open" : e.custom ? `💬 Community${e.ownerName ? " · by @" + esc(e.ownerName) : ""}${e.category && e.category !== "Community" ? " · " + esc(e.category) : ""}` : e.ongoing ? "🍿 In theaters" : e.state === "post" ? `<span class="final">🏁 FINAL</span>` : `<span class="badge-live"><span class="dot"></span>LIVE</span>`}${g && rank && !e.ongoing ? `<span>${g.emoji}</span>` : ""}<span>${esc(e.always || e.ongoing || e.custom ? "" : e.league)}</span>${e.detail ? `<span>· ${esc(e.detail)}</span>` : ""}</div>
       <div class="title">${esc(e.title)}</div>
       ${e.score ? `<div class="score">${esc(e.score)}</div>` : ""}
     </div>
@@ -793,8 +862,9 @@ async function showMyChats() {
   }
   app.innerHTML = `<main><h1>★ My Chats</h1><p class="sub">Your saved chats.</p><div id="fav"><div class="empty">Loading…</div></div></main>`;
   if (!genres.length) await loadGenres();
-  const r = await fetch("/api/favorites", { headers: authHeader() });
+  const [r, rm] = await Promise.all([fetch("/api/favorites", { headers: authHeader() }), fetch("/api/chats/mine", { headers: authHeader() })]);
   const list = r.ok ? await r.json() : [];
+  const created = rm.ok ? await rm.json() : [];
   favs = new Set(list.map((f) => f.id));
   const live = list.filter((e) => e.state === "live" || e.state === "post").sort((a, b) => b.online - a.online);
   const soon = list.filter((e) => e.state === "upcoming").sort((a, b) => new Date(a.start) - new Date(b.start));
@@ -805,9 +875,10 @@ async function showMyChats() {
         : liveCard(e)}
       <button class="unsave" data-id="${esc(e.id)}" title="Remove from My Chats">✕</button></div>`;
   const section = (title, items, isPast) => items.length ? `<h2>${title}</h2><div class="live-list">${items.map((e) => row(e, isPast)).join("")}</div>` : "";
-  document.getElementById("fav").innerHTML = list.length
+  const mineHtml = created.length ? `<h2>🛠️ Created by you</h2><div class="live-list">${created.map((e) => liveCard(e)).join("")}</div>` : "";
+  document.getElementById("fav").innerHTML = mineHtml + (list.length
     ? section(`<span class="dot"></span> Live now`, live) + section("📅 Coming up", soon) + section("Past", past, true)
-    : `<div class="empty">You haven't saved any chats yet.<br>Open any chat and tap <b>☆ Save</b>.<br><br><a href="#/">Browse live chats</a></div>`;
+    : `<div class="empty" style="margin-top:14px">You haven't saved any chats yet.<br>Open any chat and tap <b>☆ Save</b>.<br><br><a href="#/">Browse live chats</a> · <a href="#/create">Create a chat</a></div>`);
   document.getElementById("fav").onclick = async (e) => {
     const id = e.target.closest(".unsave")?.dataset.id;
     if (!id) return;
@@ -993,7 +1064,7 @@ async function showSettings() {
 }
 
 // ---------- Moderación ----------
-function openModSheet(m) {
+function openModSheet(m, full = true) {
   const div = document.createElement("div");
   div.className = "sheet";
   const acct = Boolean(m.uid);
@@ -1002,10 +1073,10 @@ function openModSheet(m) {
     <button data-a="delete">🗑️ Delete this message</button>
     ${acct ? `<div class="lbl">Mute in this chat</div>
     <div class="row3"><button data-a="mute" data-m="5">5 min</button><button data-a="mute" data-m="60">1 hour</button><button data-a="mute" data-m="1440">24 hours</button></div>
-    <div class="row3" style="grid-template-columns:1fr 1fr"><button data-a="removephoto">🖼️ Remove photo</button><button data-a="removephoto" data-block="1">🖼️ Remove & block uploads</button></div>
+    ${full ? `<div class="row3" style="grid-template-columns:1fr 1fr"><button data-a="removephoto">🖼️ Remove photo</button><button data-a="removephoto" data-block="1">🖼️ Remove & block uploads</button></div>` : ""}
     <button data-a="kick">👢 Remove from this chat</button>
     <button class="danger" data-a="ban">🚫 Remove & ban from this chat</button>
-    <button class="danger big" data-a="globalban">⛔ Remove & ban from ALL chats</button>` : `<p class="q">This person has no account, so only their message can be deleted.</p>`}
+    ${full ? `<button class="danger big" data-a="globalban">⛔ Remove & ban from ALL chats</button>` : ""}` : `<p class="q">This person has no account, so only their message can be deleted.</p>`}
     <button class="cancel" data-a="cancel">Cancel</button></div>`;
   document.body.appendChild(div);
   div.onclick = (e) => {
@@ -1049,41 +1120,237 @@ async function showModPanel() {
   };
 }
 
-// ---------- Categorías ----------
+// ---------- Subcategorías de cada categoría ----------
+const SUBS = {
+  sports: [["Basketball", "🏀", "#ff7a35"], ["Football", "🏈", "#b3541e"], ["Soccer", "⚽", "#10ac84"], ["Baseball", "⚾", "#e74c3c"], ["Hockey", "🏒", "#0abde3"], ["MMA", "🥊", "#c0392b"]],
+  movies: [["TV Shows", "📺", "#e84393"], ["Streaming", "🍿", "#6c5ce7"], ["Awards", "🏆", "#fdcb6e"], ["Premieres", "🎬", "#ff6b6b"]],
+  gaming: [["Esports", "🏆", "#6c5ce7"], ["Streams", "🎥", "#a29bfe"], ["Game releases", "🕹️", "#00cec9"], ["Awards", "🎖️", "#fdcb6e"]],
+  music: [["Concerts", "🎤", "#00b894"], ["Awards", "🏆", "#fdcb6e"], ["Album drops", "💿", "#0984e3"], ["Festivals", "🎪", "#e17055"]],
+  shows: [["Awards", "🏆", "#fdcb6e"], ["Pageants", "👑", "#e84393"], ["Reality TV", "📺", "#fd79a8"], ["Live TV", "📡", "#74b9ff"]],
+  other: [["News", "📰", "#74b9ff"], ["Watch parties", "🛋️", "#a29bfe"], ["Local events", "📍", "#55efc4"], ["Hangout", "💬", "#ffeaa7"]],
+};
+const subsOf = (gid) => SUBS[gid] || [];
+const isLiveish = (e) => (e.state === "live" && !e.always && !e.custom) || e.state === "post";
+
+// Banner grande (categoría o subcategoría), todos del mismo tamaño
+function catBanner({ href, color, emoji, name, stats, cta = "Explore" }) {
+  return `<a class="cat-banner" href="${href}" style="--c:${color}">
+    <div class="cb-bg"></div><div class="cb-emoji">${emoji}</div>
+    <div class="cb-body"><b>${esc(name)}</b><small>${stats || "&nbsp;"}</small></div>
+    <span class="cb-cta">${cta} →</span></a>`;
+}
+const statLine = (live, community, online) => [
+  live ? `<span class="badge-live"><span class="dot"></span>${live} live</span>` : "",
+  community ? `💬 ${community} chat${community > 1 ? "s" : ""}` : "",
+  online ? `👥 ${online}` : "",
+].filter(Boolean).join(" · ") || "Nothing live now";
+
+// ---------- Categorías: banners grandes y simétricos ----------
 async function showCategories() {
   header("cat");
-  app.innerHTML = `<main><h1>Categories</h1><p class="sub">What are you watching?</p><div class="genres" id="g"></div></main>`;
+  app.innerHTML = `<main class="wide"><div class="page-head"><div><h1>Categories</h1><p class="sub">Live chat for anything. Pick what you're into.</p></div>
+    <a class="create-btn" href="#/create">＋ Create chat</a></div><div class="cat-grid" id="g"></div></main>`;
   await loadGenres();
-  document.getElementById("g").innerHTML = genres.map((g) => `
-    <a class="genre" href="#/g/${g.id}" style="--c:${g.color}">
-      <div class="emoji">${g.emoji}</div>
-      <div><div class="name">${esc(g.name)}</div>
-      <div class="info">${g.id === "theaters" ? (g.showing ? `🎟️ ${g.showing} movies showing` : "Coming soon") : g.live ? `<span class="badge-live"><span class="dot"></span>${g.live} live</span>` : "Nothing live now"}${g.online ? ` · 💬 ${g.online}` : ""}</div></div>
-    </a>`).join("");
+  const tiles = genres.map((g) => catBanner({
+    href: `#/g/${g.id}`, color: g.color, emoji: g.emoji, name: g.name,
+    stats: g.id === "theaters" ? (g.showing ? `🎟️ ${g.showing} movies showing` : "Movie chats") : statLine(g.live, g.community, g.online),
+  }));
+  // Banner para crear chat: completa la cuadrícula (simétrica en celular y computadora)
+  tiles.push(catBanner({ href: "#/create", color: "#9b5cff", emoji: "＋", name: "Create your own chat", stats: "Public or private, for anything", cta: "Create" }).replace('class="cat-banner"', 'class="cat-banner create-tile"'));
+  document.getElementById("g").innerHTML = tiles.join("");
 }
 
-// ---------- Una categoría ----------
+// ---------- Una categoría: subcategorías en banners + lo que está en vivo ----------
 async function showGenre(gid) {
   if (gid === "theaters") return showTheaters();
   header("cat");
   if (!genres.length) await loadGenres();
   const g = genreById(gid);
   if (!g) return (location.hash = "#/categories");
-  app.innerHTML = `<main><h1>${g.emoji} ${esc(g.name)}</h1>
-    <h2><span class="dot"></span> Live now</h2><div class="live-list" id="live"></div>
+  app.innerHTML = `<main class="wide">
+    <div class="genre-hero" style="--c:${g.color}"><div class="gh-emoji">${g.emoji}</div><div><a class="crumb" href="#/categories">← Categories</a><h1>${esc(g.name)}</h1><p id="gStats" class="sub" style="margin:0"></p></div></div>
+    <div class="cat-grid" id="subs"></div>
+    <section class="h-sec" id="liveSec" hidden><div class="h-head"><h2><span class="dot"></span> Live now</h2></div><div class="banners" id="live"></div></section>
+    <section class="h-sec" id="comSec"><div class="h-head"><h2>💬 Community chats</h2><a class="see" href="#/create?g=${gid}">＋ Create</a></div><div class="live-list" id="com"></div></section>
     <a class="cal-btn" href="#/g/${gid}/calendar"><div><b>📅 ${esc(g.name)} calendar</b><small id="calInfo">What's coming up in the next few days</small></div><span>›</span></a>
   </main>`;
   const events = await api("/api/events?genre=" + gid);
-  // En vivo primero; después los que acaban de terminar (post-game, 2 horas)
-  const live = [...events.filter((e) => e.state === "live" && !e.always).sort((a, b) => b.online - a.online),
-    ...events.filter((e) => e.state === "post").sort((a, b) => b.online - a.online)];
-  const general = events.find((e) => e.always);
+  if (!document.getElementById("subs")) return;
+  const live = events.filter(isLiveish).sort((a, b) => (a.state === "post") - (b.state === "post") || b.online - a.online);
+  const community = [...events.filter((e) => e.always), ...events.filter((e) => e.custom).sort((a, b) => b.online - a.online)];
   const upcoming = events.filter((e) => e.state === "upcoming");
-  document.getElementById("live").innerHTML =
-    (live.length ? live.map((e) => liveCard(e)).join("") : `<div class="empty">Nothing is live right now.</div>`) +
-    (general ? liveCard(general) : "");
-  document.getElementById("calInfo").textContent = upcoming.length
-    ? `${upcoming.length} upcoming event${upcoming.length > 1 ? "s" : ""}` : "No events scheduled yet";
+  // Subcategorías conocidas + las que vengan en los eventos
+  const subs = [...subsOf(gid)];
+  for (const e of events) if (!e.always && !e.custom && e.category && !subs.some(([n]) => n === e.category)) subs.push([e.category, g.emoji, g.color]);
+  document.getElementById("subs").innerHTML = subs.map(([name, emoji, color]) => {
+    const inSub = events.filter((e) => e.category === name);
+    return catBanner({ href: `#/g/${gid}/s/${encodeURIComponent(name)}`, color, emoji, name,
+      stats: statLine(inSub.filter((e) => e.state === "live" && !e.always && !e.custom).length, inSub.filter((e) => e.custom).length, inSub.reduce((t, e) => t + e.online, 0)) });
+  }).join("");
+  document.getElementById("gStats").innerHTML = statLine(live.filter((e) => e.state === "live").length, events.filter((e) => e.custom).length, events.reduce((t, e) => t + e.online, 0));
+  document.getElementById("liveSec").hidden = !live.length;
+  document.getElementById("live").innerHTML = live.map((e) => banner(e)).join("");
+  document.getElementById("com").innerHTML = community.map((e) => liveCard(e)).join("") || `<div class="empty">No community chats yet. <a href="#/create?g=${gid}">Create the first one</a></div>`;
+  document.getElementById("calInfo").textContent = upcoming.length ? `${upcoming.length} upcoming event${upcoming.length > 1 ? "s" : ""}` : "No events scheduled yet";
+}
+
+// ---------- Subcategoría (ej. Sports → Basketball) ----------
+async function showSub(gid, sub) {
+  header("cat");
+  if (!genres.length) await loadGenres();
+  const g = genreById(gid);
+  if (!g) return (location.hash = "#/categories");
+  const def = subsOf(gid).find(([n]) => n === sub) || [sub, g.emoji, g.color];
+  app.innerHTML = `<main class="wide">
+    <div class="genre-hero" style="--c:${def[2]}"><div class="gh-emoji">${def[1]}</div><div><a class="crumb" href="#/g/${gid}">← ${esc(g.name)}</a><h1>${esc(sub)}</h1><p id="sStats" class="sub" style="margin:0"></p></div></div>
+    <section class="h-sec"><div class="h-head"><h2><span class="dot"></span> Live now</h2></div><div class="banners" id="live"></div></section>
+    <section class="h-sec"><div class="h-head"><h2>💬 Community chats</h2><a class="see" href="#/create?g=${gid}&t=${encodeURIComponent(sub)}">＋ Create</a></div><div class="live-list" id="com"></div></section>
+    <section class="h-sec" id="upSec" hidden><div class="h-head"><h2>📅 Coming up</h2><a class="see" href="#/g/${gid}/calendar">Calendar ›</a></div><div id="up"></div></section>
+  </main>`;
+  const events = (await api("/api/events?genre=" + gid)).filter((e) => e.category === sub);
+  if (!document.getElementById("live")) return;
+  const live = events.filter(isLiveish).sort((a, b) => (a.state === "post") - (b.state === "post") || b.online - a.online);
+  const com = events.filter((e) => e.custom).sort((a, b) => b.online - a.online);
+  const up = events.filter((e) => e.state === "upcoming").slice(0, 15);
+  document.getElementById("sStats").innerHTML = statLine(live.filter((e) => e.state === "live").length, com.length, events.reduce((t, e) => t + e.online, 0));
+  document.getElementById("live").innerHTML = live.map((e) => banner(e)).join("") || `<div class="empty" style="grid-column:1/-1">Nothing live in ${esc(sub)} right now.</div>`;
+  document.getElementById("com").innerHTML = com.map((e) => liveCard(e)).join("") || `<div class="empty">No ${esc(sub)} chats yet. <a href="#/create?g=${gid}&t=${encodeURIComponent(sub)}">Create one</a></div>`;
+  document.getElementById("upSec").hidden = !up.length;
+  document.getElementById("up").innerHTML = up.map((e) => `<a class="row" href="#/room/${encodeURIComponent(e.id)}">
+      <div class="time">${new Date(e.start).toLocaleDateString("en-US", { weekday:"short" })}<br>${e.allDay ? "" : hora(e.start)}</div>
+      <div><div class="title">${esc(e.title)}</div><div class="lg">${esc(e.league)}</div></div></a>`).join("");
+}
+
+// ---------- Crear un chat / entrar con código ----------
+async function showCreate(params) {
+  header("create");
+  if (!genres.length) await loadGenres();
+  const tab = params.get("tab") === "join" ? "join" : "create";
+  app.innerHTML = `<main><div class="seg big-seg" id="ctab"><button data-v="create" class="${tab === "create" ? "on" : ""}">＋ Create a chat</button><button data-v="join" class="${tab === "join" ? "on" : ""}">🔑 Join with code</button></div><div id="cbody"></div></main>`;
+  document.getElementById("ctab").onclick = (e) => {
+    const v = e.target.closest("[data-v]")?.dataset.v;
+    if (v) location.hash = v === "join" ? "#/create?tab=join" : "#/create";
+  };
+  const body = document.getElementById("cbody");
+
+  if (tab === "join") {
+    body.innerHTML = `<div class="set-card form-card"><h2 class="fh">Join a chat with a code</h2><p class="sub">Got a code from a friend? Type it here.</p>
+      <input class="field code-input" id="jc" maxlength="12" placeholder="e.g. 7KQ2XM" autocomplete="off" autocapitalize="characters">
+      <div class="err" id="jerr"></div><button class="btn" id="jgo" style="width:100%">Join chat</button></div>`;
+    const go = async () => {
+      const code = document.getElementById("jc").value.trim();
+      if (!code) return;
+      const r = await fetch("/api/chats/code/" + encodeURIComponent(code));
+      const d = await r.json();
+      if (!r.ok) return (document.getElementById("jerr").textContent = d.error);
+      location.hash = "#/room/" + encodeURIComponent(d.id);
+    };
+    document.getElementById("jgo").onclick = go;
+    document.getElementById("jc").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+    document.getElementById("jc").focus();
+    return;
+  }
+
+  if (!cfg.auth) { body.innerHTML = `<div class="empty">Creating chats needs accounts, which aren't turned on yet.</div>`; return; }
+  if (!me?.username) {
+    body.innerHTML = `<div class="join-card" style="margin:0"><div><b>Create your own live chat</b><span>Sign up to create chats for anything — public or private with a code.</span></div><button class="btn" id="su">Sign up</button></div>`;
+    document.getElementById("su").onclick = () => openLogin("signup");
+    return;
+  }
+  const pick = genres.find((x) => x.id === params.get("g")) ? params.get("g") : "";
+  const { code } = await api("/api/chats/new-code");
+  body.innerHTML = `<div class="set-card form-card">
+    <label class="fl">Chat name</label>
+    <input class="field" id="cName" maxlength="60" placeholder="e.g. Lakers watch party, Bad Bunny concert, Friends trivia night" autocomplete="off">
+    <label class="fl">Category</label>
+    <div class="gpick" id="cGenre">${genres.map((x) => `<button type="button" data-g="${x.id}" class="${x.id === pick ? "on" : ""}" style="--c:${x.color}"><span>${x.emoji}</span>${esc(x.name)}</button>`).join("")}</div>
+    <div id="topicWrap" hidden><label class="fl">Topic <small>(optional)</small></label><div class="chips" id="cTopic" style="margin-top:0"></div></div>
+    <label class="fl">Who can join?</label>
+    <div class="privacy" id="cPriv">
+      <button type="button" data-p="1" class="on"><b>🌐 Public</b><small>Shows up in its category. Anyone can join.</small></button>
+      <button type="button" data-p="0"><b>🔒 Private</b><small>Hidden. Only people with the code or link can join.</small></button>
+    </div>
+    <label class="fl">Special code</label>
+    <div class="code-row"><input class="field code-input" id="cCode" maxlength="12" value="${esc(code)}" autocomplete="off" autocapitalize="characters"><button type="button" class="set-btn" id="reroll" title="New random code">🎲</button></div>
+    <small class="hint">People can type this code in “Join with code” to go straight to your chat. 4–12 letters or numbers.</small>
+    <div class="err" id="cErr" style="margin-top:12px"></div>
+    <button class="btn" id="cGo" style="width:100%">Create chat</button>
+    <p class="legal" style="text-align:center;margin-top:10px">You'll be the moderator of your chat. Chats stay open for 30 days.</p>
+  </div>`;
+  let genre = pick, topic = params.get("t") || "", isPublic = true;
+  const drawTopics = () => {
+    const list = subsOf(genre);
+    document.getElementById("topicWrap").hidden = !list.length;
+    document.getElementById("cTopic").innerHTML = list.map(([n, e]) => `<button type="button" class="chip ${n === topic ? "on" : ""}" data-t="${esc(n)}">${e} ${esc(n)}</button>`).join("");
+  };
+  drawTopics();
+  document.getElementById("cGenre").onclick = (e) => {
+    const b = e.target.closest("[data-g]"); if (!b) return;
+    genre = b.dataset.g; topic = "";
+    document.querySelectorAll("#cGenre button").forEach((x) => x.classList.toggle("on", x === b));
+    drawTopics();
+  };
+  document.getElementById("cTopic").onclick = (e) => {
+    const b = e.target.closest("[data-t]"); if (!b) return;
+    topic = topic === b.dataset.t ? "" : b.dataset.t;
+    drawTopics();
+  };
+  document.getElementById("cPriv").onclick = (e) => {
+    const b = e.target.closest("[data-p]"); if (!b) return;
+    isPublic = b.dataset.p === "1";
+    document.querySelectorAll("#cPriv button").forEach((x) => x.classList.toggle("on", x === b));
+  };
+  const codeEl = document.getElementById("cCode");
+  codeEl.addEventListener("input", () => { codeEl.value = codeEl.value.toUpperCase().replace(/[^A-Z0-9]/g, ""); });
+  document.getElementById("reroll").onclick = async () => { codeEl.value = (await api("/api/chats/new-code")).code; };
+  document.getElementById("cGo").onclick = async (ev) => {
+    const err = document.getElementById("cErr");
+    err.textContent = "";
+    if (!genre) return (err.textContent = "Pick a category.");
+    ev.target.disabled = true;
+    const r = await fetch("/api/chats", { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() },
+      body: JSON.stringify({ name: document.getElementById("cName").value, genre, topic, isPublic, code: codeEl.value }) });
+    const d = await r.json().catch(() => ({}));
+    ev.target.disabled = false;
+    if (!r.ok) return (err.textContent = d.error || "Could not create the chat.");
+    showCreated(d);
+  };
+  document.getElementById("cName").focus();
+}
+
+const chatLink = (code) => `${location.origin}/#/c/${code}`;
+function showCreated(c) {
+  const g = genreById(c.genre);
+  // Cambiar la dirección para que "＋ Create" vuelva a abrir el formulario
+  history.replaceState(null, "", "#/create?done=" + encodeURIComponent(c.code));
+  app.innerHTML = `<main><div class="set-card form-card created">
+    <div class="big-emoji">🎉</div><h1>Your chat is ready!</h1>
+    <p class="sub">${g ? g.emoji + " " + esc(g.name) : ""}${c.category && c.category !== "Community" ? " · " + esc(c.category) : ""} · ${c.isPublic ? "🌐 Public" : "🔒 Private"}</p>
+    <h2 class="fh" style="margin-top:6px">${esc(c.title)}</h2>
+    <div class="code-show"><small>Special code</small><b>${esc(c.code)}</b></div>
+    <div class="link-row"><input class="field" readonly value="${esc(chatLink(c.code))}" id="lnk"><button class="set-btn" id="copy">Copy</button></div>
+    <div class="two"><button class="btn ghost" id="share">Share</button><a class="btn" href="#/room/${encodeURIComponent(c.id)}">Open chat →</a></div>
+  </div></main>`;
+  document.getElementById("copy").onclick = () => copyText(chatLink(c.code));
+  document.getElementById("share").onclick = () => shareChat(c);
+}
+function copyText(t) {
+  (navigator.clipboard?.writeText(t) || Promise.reject()).then(() => toast("Link copied ✓"), () => { prompt("Copy this link:", t); });
+}
+function shareChat(c) {
+  const url = chatLink(c.code);
+  if (navigator.share) navigator.share({ title: c.title + " · Rugo", text: `Join my live chat on Rugo: ${c.title} (code ${c.code})`, url }).catch(() => {});
+  else copyText(url);
+}
+
+// Link con código: rugo.chat/#/c/CODIGO
+async function openByCode(code) {
+  header("");
+  app.innerHTML = `<div class="namebox">Opening chat…</div>`;
+  const r = await fetch("/api/chats/code/" + encodeURIComponent(code));
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { app.innerHTML = `<div class="namebox"><h1>🔑</h1><p class="sub">${esc(d.error || "Chat not found.")}</p><a class="btn" href="#/create?tab=join">Try another code</a></div>`; return; }
+  location.replace("#/room/" + encodeURIComponent(d.id));
 }
 
 // ---------- In Theaters: carteleras por país ----------
@@ -1176,7 +1443,10 @@ async function showRoom(id) {
   const when = ev.state === "upcoming" ? (ev.allDay
     ? `Opens ${new Date(ev.start).toLocaleDateString("en-US", { month:"short", day:"numeric", timeZone:"UTC" })}`
     : `Starts ${new Date(ev.start).toLocaleString("en-US", { weekday:"short", hour:"numeric", minute:"2-digit" })}`) : "";
-  const badge = isLive ? `<span class="pill live"><span class="dot"></span>LIVE</span>`
+  const isOwner = Boolean(ev.custom && me?.id && ev.owner === me.id);
+  const canMod = isStaff() || isOwner;
+  const badge = ev.custom ? `<span class="pill">${ev.isPublic ? "💬 Community" : "🔒 Private"}</span>`
+    : isLive ? `<span class="pill live"><span class="dot"></span>LIVE</span>`
     : ev.state === "post" ? `<span class="pill final">🏁 FINAL · Postgame</span>`
     : ev.ongoing ? `<span class="pill">🍿 Now playing</span>` : ev.always ? `<span class="pill">💬 Always open</span>`
     : when ? `<span class="pill">📅 ${esc(when)}</span>` : "";
@@ -1185,9 +1455,10 @@ async function showRoom(id) {
     <div class="room-head">
       <div class="rh-top">
         <a class="icon-btn" href="javascript:history.back()" aria-label="Back">←</a>
-        <div class="rh-badges">${badge}<span class="pill muted">${g ? g.emoji + " " : ""}${esc(ev.league)}</span></div>
+        <div class="rh-badges">${badge}<span class="pill muted">${g ? g.emoji + " " : ""}${esc(ev.custom ? (ev.ownerName ? "by @" + ev.ownerName : g?.name || "") : ev.league)}</span></div>
         <div class="rh-actions">
           <span class="pill viewers" id="online"><span class="dot green"></span>${ev.online}</span>
+          <button class="save-btn" id="shareBtn" aria-label="Share">↗ Share</button>
           ${cfg.auth ? `<button class="save-btn ${favs.has(ev.id) ? "on" : ""}" id="saveBtn">${favs.has(ev.id) ? "★ Saved" : "☆ Save"}</button>` : ""}
         </div>
       </div>
@@ -1202,6 +1473,31 @@ async function showRoom(id) {
     <div id="composer"></div>
   </div>`;
 
+  document.getElementById("shareBtn").onclick = () => {
+    const url = ev.custom ? chatLink(ev.code) : `${location.origin}/#/room/${encodeURIComponent(ev.id)}`;
+    const div = document.createElement("div");
+    div.className = "sheet";
+    div.innerHTML = `<div class="sheet-box"><h3>↗ Share this chat</h3><p class="q">${esc(ev.title)}</p>
+      ${ev.custom ? `<div class="code-show" style="margin:4px 0 12px"><small>Special code</small><b>${esc(ev.code)}</b></div>` : ""}
+      <button data-a="copy">🔗 Copy link</button>
+      ${navigator.share ? `<button data-a="share">📤 Share…</button>` : ""}
+      ${isOwner || (ev.custom && isStaff()) ? `<button class="danger" data-a="close">🗑️ Close this chat for everyone</button>` : ""}
+      <button class="cancel" data-a="cancel">Cancel</button></div>`;
+    document.body.appendChild(div);
+    div.onclick = async (e) => {
+      if (e.target === div) return div.remove();
+      const a = e.target.closest("[data-a]")?.dataset.a;
+      if (!a) return;
+      if (a === "copy") copyText(url);
+      if (a === "share") navigator.share({ title: ev.title + " · Rugo", text: `Join the live chat on Rugo: ${ev.title}${ev.custom ? ` (code ${ev.code})` : ""}`, url }).catch(() => {});
+      if (a === "close") {
+        if (!confirm("Close this chat for everyone? This can't be undone.")) return;
+        const r = await fetch("/api/chats/" + encodeURIComponent(ev.id), { method: "DELETE", headers: authHeader() });
+        if (!r.ok) alert((await r.json().catch(() => ({}))).error || "Could not close the chat.");
+      }
+      div.remove();
+    };
+  };
   document.getElementById("saveBtn")?.addEventListener("click", async (e) => {
     const btn = e.currentTarget;
     const on = await toggleFav(ev.id);
@@ -1230,7 +1526,7 @@ async function showRoom(id) {
     return `<div class="msg ${grouped ? "grouped" : ""} ${mine ? "mine" : ""} ${mention ? "mention" : ""}" data-id="${esc(m.id)}" data-uid="${esc(m.uid || "")}" data-name="${esc(m.name)}">
       ${grouped ? `<div class="av-space"></div>` : avatarHtml(m)}
       <div class="bubble">${grouped ? "" : `<div class="who"><b style="color:${esc(m.color || colorFor(m.name))}">${esc(m.name)}</b>${m.role ? `<span class="staff">${m.role === "admin" ? "ADMIN" : "MOD"}</span>` : ""}<time>${timeOf(m.at)}</time></div>`}<div class="txt">${text}</div></div>
-      ${isStaff() && !mine ? `<button class="mod-btn" aria-label="Moderate">⋯</button>` : ""}
+      ${canMod && !mine ? `<button class="mod-btn" aria-label="Moderate">⋯</button>` : ""}
     </div>`;
   };
   const add = (html, force) => {
@@ -1324,6 +1620,7 @@ async function showRoom(id) {
     if (area) area.innerHTML = `<div class="blocked"><div class="big">${icon}</div><b>${title}</b><span>${sub}</span><a class="btn" href="#/" style="margin-top:10px">Go to home</a></div>`;
     if (comp) comp.innerHTML = "";
   };
+  socket.on("closed", () => blockScreen("🔒", "This chat was closed", "The creator closed this chat."));
   socket.on("kicked", () => blockScreen("👢", "You were removed from this chat", "A moderator removed you. You can join again later."));
   socket.on("banned", ({ global, reason }) => blockScreen(global ? "⛔" : "🚫",
     global ? "You are banned from Rugo chats" : "You are banned from this chat",
@@ -1333,7 +1630,7 @@ async function showRoom(id) {
     const b = e.target.closest(".mod-btn");
     if (!b) return;
     const row = b.closest(".msg");
-    openModSheet({ id: row.dataset.id, uid: row.dataset.uid, name: row.dataset.name, text: row.querySelector(".txt")?.textContent || "" });
+    openModSheet({ id: row.dataset.id, uid: row.dataset.uid, name: row.dataset.name, text: row.querySelector(".txt")?.textContent || "" }, isStaff());
   });
   socket.on("history", (list) => {
     lastName = null;
