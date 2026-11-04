@@ -25,7 +25,7 @@ async function recent(roomId) {
         console.error("Messages load failed:", error.code, error.message);
         return [];
       }
-      const list = data.reverse().map((m) => ({ id: m.mid || String(m.id), uid: m.user_id || null, name: m.name, avatar: m.avatar, text: m.text, at: new Date(m.created_at).getTime() }));
+      const list = data.reverse().map((m) => ({ id: m.mid || String(m.id), uid: m.user_id || null, color: m.color || undefined, name: m.name, avatar: m.avatar, text: m.text, at: new Date(m.created_at).getTime() }));
       // Si llegaron mensajes nuevos mientras cargaba, no perderlos
       const fresh = cache.get(roomId) || [];
       const merged = [...list, ...fresh.filter((f) => !list.some((l) => l.id === f.id))].slice(-PER_ROOM);
@@ -43,11 +43,11 @@ function add(roomId, msg, userId) {
   cache.set(roomId, list);
   if (db()) {
     db().from("messages")
-      .insert({ room_id: roomId, user_id: userId || null, name: msg.name, avatar: msg.avatar, text: msg.text, mid: msg.id })
+      .insert({ room_id: roomId, user_id: userId || null, name: msg.name, avatar: msg.avatar, text: msg.text, mid: msg.id, color: msg.color || null })
       .then(async ({ error }) => {
         if (!error) return;
-        // Si la columna "mid" todavía no existe, guardar sin ella
-        if (/mid/.test(error.message || "")) {
+        // Si alguna columna nueva todavía no existe en la base de datos, guardar lo básico
+        if (/mid|color|column/.test(error.message || "")) {
           const r = await db().from("messages").insert({ room_id: roomId, user_id: userId || null, name: msg.name, avatar: msg.avatar, text: msg.text });
           if (r.error) console.error("Message save failed:", r.error.code, r.error.message);
         } else console.error("Message save failed:", error.code, error.message);

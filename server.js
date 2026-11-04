@@ -178,7 +178,8 @@ io.on("connection", (socket) => {
         socket.data.name = me.profile.username;
         socket.data.userId = me.user.id;
         socket.data.role = me.profile.role || "user";
-        socket.data.avatar = me.profile.avatar_url || me.user.user_metadata?.avatar_url || null;
+        socket.data.avatar = me.profile.show_photo === false ? null : me.profile.avatar_url || me.user.user_metadata?.avatar_url || null;
+        socket.data.color = me.profile.name_color || null;
       }
     } else {
       // Sin cuentas configuradas: modo invitado con apodo
@@ -223,6 +224,7 @@ io.on("connection", (socket) => {
       role: Mod.isStaff(socket.data.role) ? socket.data.role : undefined,
       name: socket.data.name,
       avatar: socket.data.avatar || null,
+      color: socket.data.color || undefined,
       text: result.text,
       at: Date.now(),
     };

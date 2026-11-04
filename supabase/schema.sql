@@ -73,3 +73,8 @@ grant select, insert, update, delete on public.moderation to service_role;
 -- Identificador de cada mensaje (para poder borrarlos)
 alter table public.messages add column if not exists mid text;
 create index if not exists messages_mid on public.messages (mid);
+
+-- ============ Settings del perfil ============
+alter table public.profiles add column if not exists name_color text;
+alter table public.profiles add column if not exists show_photo boolean not null default true;
+alter table public.messages add column if not exists color text;

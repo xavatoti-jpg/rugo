@@ -28,6 +28,9 @@ async function userFromToken(token) {
   return entry;
 }
 
+// Colores que se pueden elegir para el nombre en el chat
+const NAME_COLORS = ["#ff6b6b", "#ff9f43", "#feca57", "#1dd1a1", "#48dbfb", "#54a0ff", "#9b5cff", "#ff6bcb", "#c8d6e5"];
+
 function validUsername(name) {
   if (!/^[A-Za-z0-9_]{3,20}$/.test(name)) return "Use 3 to 20 letters, numbers or _ (no spaces).";
   if (hasBadWord(name.replace(/_/g, " ")) || hasBadWord(name)) return "That username is not allowed.";
@@ -46,7 +49,49 @@ function routes(app) {
   app.get("/api/me", async (req, res) => {
     const me = await userFromToken(bearer(req));
     if (!me) return res.status(401).json({ error: "Not signed in" });
-    res.json({ id: me.user.id, username: me.profile?.username || null, role: me.profile?.role || "user", avatar: me.profile?.avatar_url || me.user.user_metadata?.avatar_url || null });
+    const p = me.profile || {};
+    const photo = p.avatar_url || me.user.user_metadata?.avatar_url || null;
+    res.json({
+      id: me.user.id, username: p.username || null, role: p.role || "user",
+      avatar: p.show_photo === false ? null : photo, photo,
+      showPhoto: p.show_photo !== false, nameColor: p.name_color || null,
+      email: me.user.email || null, provider: me.user.app_metadata?.provider || null,
+      joined: p.created_at || me.user.created_at || null,
+    });
+  });
+
+  // Settings: color del nombre y foto de perfil
+  app.patch("/api/profile", require("express").json(), async (req, res) => {
+    const token = bearer(req);
+    const me = await userFromToken(token);
+    if (!me?.profile?.username) return res.status(401).json({ error: "Not signed in" });
+    const changes = {};
+    if ("nameColor" in (req.body || {})) {
+      const c = req.body.nameColor;
+      if (c !== null && !NAME_COLORS.includes(c)) return res.status(400).json({ error: "Invalid color" });
+      changes.name_color = c;
+    }
+    if ("showPhoto" in (req.body || {})) changes.show_photo = Boolean(req.body.showPhoto);
+    const { error } = await admin.from("profiles").update(changes).eq("id", me.user.id);
+    if (error) {
+      console.error("Profile update failed:", error.code, error.message);
+      return res.status(500).json({ error: /column/.test(error.message || "") ? "Settings need a database update (run the new SQL)." : "Could not save. Please try again." });
+    }
+    for (const [k, v] of cache) if (v.user.id === me.user.id) cache.delete(k);
+    res.json({ ok: true });
+  });
+
+  // Borrar mi cuenta (para siempre)
+  app.delete("/api/account", async (req, res) => {
+    const me = await userFromToken(bearer(req));
+    if (!me) return res.status(401).json({ error: "Not signed in" });
+    const { error } = await admin.auth.admin.deleteUser(me.user.id);
+    if (error) {
+      console.error("Account delete failed:", error.message);
+      return res.status(500).json({ error: "Could not delete the account. Please contact us." });
+    }
+    for (const [k, v] of cache) if (v.user.id === me.user.id) cache.delete(k);
+    res.json({ ok: true });
   });
 
   // Elegir nombre de usuario (solo la primera vez)
@@ -74,4 +119,4 @@ function routes(app) {
   });
 }
 
-module.exports = { enabled, userFromToken, routes, admin };
+module.exports = { enabled, userFromToken, routes, admin, NAME_COLORS };

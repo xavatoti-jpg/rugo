@@ -99,7 +99,9 @@
   .bn-seam { position:absolute; inset:0; z-index:-1; background:linear-gradient(98deg, transparent 49.2%, #ffffffaa 49.6%, #ffffff 50%, #ffffffaa 50.4%, transparent 50.8%); opacity:.35; mix-blend-mode:overlay; }
   .bn-shade { position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg, #0000 35%, #000c 100%), radial-gradient(ellipse at 50% 45%, #0000 40%, #0005 100%); }
   .bn-top { position:absolute; top:12px; left:14px; right:14px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
-  .bn-tags { display:flex; gap:6px; min-width:0; }
+  .bn-tags { display:flex; gap:6px; min-width:0; overflow:hidden; }
+  .bn-tags .bn-tag:last-child:not(:first-child) { flex-shrink:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  @media (max-width:719px) { .carousel .bn-tag.trend .tx { display:none; } }
   .bn-tag { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:.04em; background:#000a; backdrop-filter:blur(6px); white-space:nowrap; color:#fff; }
   .bn-tag.live { background:var(--live); }
   .bn-tag.live .dot { background:#fff; }
@@ -167,6 +169,108 @@
   .mod-item .k { font-size:22px; }
   .lift { background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:7px 12px; cursor:pointer; font-weight:700; font-size:13px; }
   .lift:hover { border-color:#2ecc71; color:#2ecc71; }
+
+  /* Portada compacta */
+  .home .h-sec { margin-bottom:26px; }
+  .h-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 10px; }
+  .h-head h2 { margin:0; }
+  .h-right { display:flex; align-items:center; gap:6px; }
+  .h-right small { color:var(--muted); font-size:13px; margin-right:4px; }
+  .see { color:var(--muted); font-size:14px; font-weight:600; }
+  .see:hover { color:var(--text); }
+  .arrow { display:none; width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:var(--panel); cursor:pointer; font-size:18px; line-height:1; }
+  .arrow:hover { border-color:var(--muted); }
+  @media (min-width:720px) and (hover:hover) { .arrow { display:grid; place-items:center; } }
+  .carousel { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; scroll-behavior:smooth; margin:0 -16px; padding:0 16px; scroll-padding:0 16px; }
+  .carousel::-webkit-scrollbar { display:none; }
+  .carousel .banner { flex:0 0 88%; height:172px; scroll-snap-align:start; box-shadow:0 6px 18px #0005; }
+  .carousel .banner:hover { transform:none; }
+  @media (min-width:720px) { .carousel { margin:0; padding:0; scroll-padding:0; } .carousel .banner { flex-basis:calc(50% - 6px); height:196px; } }
+  .carousel .crest { width:54px; height:54px; }
+  .carousel .scorebox { padding:6px 12px; min-width:84px; }
+  .carousel .scorebox b { font-size:21px; }
+  .carousel .tname { font-size:12px; }
+  .carousel .bn-teams { top:48%; }
+  .dots { display:flex; justify-content:center; gap:6px; margin-top:10px; min-height:8px; }
+  .dots button { width:7px; height:7px; border-radius:999px; border:0; background:#ffffff30; padding:0; cursor:pointer; transition:.2s; }
+  .dots button.on { width:22px; background:var(--accent); }
+  .row-scroll { display:flex; gap:10px; overflow-x:auto; scrollbar-width:none; margin:0 -16px; padding:2px 16px 4px; }
+  .row-scroll::-webkit-scrollbar { display:none; }
+  @media (min-width:720px) { .row-scroll { margin:0; padding:2px 0 4px; } }
+  .mini { flex:0 0 150px; border-radius:14px; padding:10px 12px; border:1px solid var(--line); background:linear-gradient(135deg, color-mix(in srgb, var(--a) 30%, var(--panel)) , var(--panel) 60%, color-mix(in srgb, var(--b) 25%, var(--panel))); background-color:var(--panel); }
+  .mini:hover { border-color:var(--muted); }
+  .mini-top { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); font-weight:700; }
+  .mini-top b { color:var(--text); }
+  .mini-teams { display:flex; align-items:center; justify-content:center; gap:8px; margin:10px 0 6px; }
+  .ml { position:relative; width:38px; height:38px; display:grid; place-items:center; }
+  .ml img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:1; }
+  .ml i { font-style:normal; font-weight:900; font-size:11px; width:100%; height:100%; display:grid; place-items:center; border-radius:50%; background:#ffffff14; }
+  .ml.big { font-size:30px; }
+  .vs { font-size:11px; color:var(--muted); font-weight:800; }
+  .mini-name { font-size:12px; font-weight:700; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cat-chip { flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:10px 14px 10px 10px; border-radius:14px; border:1px solid var(--line); background:linear-gradient(135deg, color-mix(in srgb, var(--c) 28%, var(--panel)), var(--panel) 70%); background-color:var(--panel); }
+  .cat-chip:hover { border-color:var(--c); }
+  .cat-chip .e { font-size:26px; }
+  .cat-chip b { display:block; font-size:14px; white-space:nowrap; }
+  .cat-chip small { font-size:12px; color:var(--muted); white-space:nowrap; }
+  .mini-poster { flex:0 0 108px; }
+  .mini-poster .img { aspect-ratio:2/3; border-radius:12px; background:var(--panel2) center/cover; border:1px solid var(--line); display:grid; place-items:center; font-size:30px; position:relative; }
+  .mini-poster .cnt { position:absolute; left:6px; bottom:6px; background:#000b; font-size:11px; font-weight:700; padding:2px 7px; border-radius:999px; }
+  .mini-poster .t { font-size:12px; font-weight:700; margin-top:6px; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .big-list { display:grid; gap:8px; }
+  .big-row { display:flex; align-items:center; gap:14px; padding:10px 14px; border-radius:14px; background:var(--panel); border:1px solid var(--line); }
+  .big-row:hover { border-color:var(--muted); }
+  .big-row .date { width:44px; text-align:center; flex-shrink:0; border-radius:10px; background:var(--panel2); padding:4px 0; }
+  .big-row .date small { display:block; font-size:10px; font-weight:800; color:var(--live); text-transform:uppercase; }
+  .big-row .date b { font-size:18px; }
+  .big-row .body { flex:1; min-width:0; }
+  .big-row .body b { display:block; }
+  .big-row .body small { color:var(--muted); font-size:13px; }
+
+  /* Settings */
+  .gear { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; border:1px solid var(--line); background:none; cursor:pointer; flex-shrink:0; color:var(--muted); }
+  .gear:hover, .gear.on { color:var(--text); border-color:var(--muted); }
+  .gear svg { width:18px; height:18px; }
+  .set-sec { margin-top:22px; }
+  .set-sec > h2 { margin:0 0 10px; }
+  .set-card { background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .set-row { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 16px; border-bottom:1px solid var(--line); }
+  .set-row:last-child { border-bottom:0; }
+  .set-row .lbl2 { min-width:0; }
+  .set-row .lbl2 b { display:block; font-weight:600; }
+  .set-row .lbl2 small { color:var(--muted); font-size:13px; }
+  .switch { position:relative; width:46px; height:28px; flex-shrink:0; }
+  .switch input { opacity:0; width:0; height:0; position:absolute; }
+  .switch span { position:absolute; inset:0; background:#3a3a46; border-radius:999px; transition:.2s; cursor:pointer; }
+  .switch span::before { content:""; position:absolute; width:22px; height:22px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 2px 6px #0006; }
+  .switch input:checked + span { background:var(--accent); }
+  .switch input:checked + span::before { transform:translateX(18px); }
+  .switch input:focus-visible + span { outline:2px solid var(--accent); outline-offset:2px; }
+  .seg { display:inline-flex; background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:3px; flex-shrink:0; }
+  .seg button { border:0; background:none; padding:6px 12px; border-radius:999px; cursor:pointer; color:var(--muted); font-weight:700; font-size:13px; }
+  .seg button.on { background:var(--accent); color:#fff; }
+  .prof { display:flex; align-items:center; gap:14px; padding:16px; border-bottom:1px solid var(--line); }
+  .prof .big-av { width:60px; height:60px; border-radius:50%; background:var(--panel2) center/cover; display:grid; place-items:center; font-size:24px; font-weight:800; flex-shrink:0; }
+  .prof b { font-size:18px; }
+  .prof small { display:block; color:var(--muted); font-size:13px; margin-top:2px; }
+  .swatches { display:flex; flex-wrap:wrap; gap:8px; padding:0 16px 14px; }
+  .sw { width:30px; height:30px; border-radius:50%; border:2px solid transparent; cursor:pointer; }
+  .sw.on { border-color:#fff; box-shadow:0 0 0 2px var(--accent); }
+  .sw.auto { background:conic-gradient(#ff6b6b, #feca57, #1dd1a1, #48dbfb, #9b5cff, #ff6bcb, #ff6b6b); }
+  .preview { margin:0 16px 14px; padding:10px 12px; border-radius:12px; background:var(--bg); border:1px solid var(--line); font-size:14px; }
+  .set-btn { background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:8px 14px; cursor:pointer; font-weight:700; font-size:13px; flex-shrink:0; }
+  .set-btn.danger { color:#ff7675; border-color:#ff767555; }
+  .set-link { display:flex; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line); }
+  .set-link:last-child { border-bottom:0; }
+  .set-link:hover { background:#ffffff06; }
+  .saved-toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#2ecc71; color:#0b2; color:#062; font-weight:800; padding:8px 16px; border-radius:999px; z-index:40; animation:msgIn .2s; }
+  /* Preferencias del chat */
+  body.compact .msg { padding-top:2px; gap:8px; }
+  body.compact .av, body.compact .av-space { width:22px; height:22px; font-size:11px; }
+  body.compact .av-space { height:0; }
+  body.no-time .who time { display:none; }
+  body[data-text="s"] .txt { font-size:14px; }
+  body[data-text="l"] .txt { font-size:18px; }
 
   /* My Chats */
   .mychats-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; border:1px solid var(--line); font-weight:700; font-size:14px; white-space:nowrap; }
@@ -316,6 +420,17 @@ const hdr = document.getElementById("hdr");
 let socket = null, genres = [], timer = null;
 let cfg = { auth:false }, sb = null, session = null, me = null;
 let favs = new Set(); // salas guardadas en My Chats
+// Preferencias de esta persona en este aparato (Settings → Chat)
+const PREF_DEFAULTS = { reactions: true, timestamps: true, compact: false, textSize: "m" };
+let prefs = { ...PREF_DEFAULTS };
+try { prefs = { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem("prefs") || "{}") }; } catch {}
+function savePrefs() { try { localStorage.setItem("prefs", JSON.stringify(prefs)); } catch {} applyPrefs(); }
+function applyPrefs() {
+  document.body.classList.toggle("compact", prefs.compact);
+  document.body.classList.toggle("no-time", !prefs.timestamps);
+  document.body.dataset.text = prefs.textSize;
+}
+const NAME_COLORS = ["#ff6b6b", "#ff9f43", "#feca57", "#1dd1a1", "#48dbfb", "#54a0ff", "#9b5cff", "#ff6bcb", "#c8d6e5"];
 const isStaff = () => me?.role === "mod" || me?.role === "admin";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -432,9 +547,10 @@ function header(active) {
       ? `<a class="mychats-btn ${active === "my" ? "on" : ""}" href="#/mychats">★ My Chats <span class="n" style="${favs.size ? "" : "display:none"}">${favs.size}</span></a><button class="avatar" id="av" style="${me.avatar ? `background-image:url('${esc(me.avatar)}')` : `color:${colorFor(me.username)}`}">${me.avatar ? "" : esc(me.username[0].toUpperCase())}</button>`
       : `<button class="ghost-btn" id="signinBtn">Sign in</button><button class="login-btn" id="signupBtn">Sign up</button>`;
   }
+  const gear = `<a class="gear ${active === "set" ? "on" : ""}" href="#/settings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>`;
   hdr.innerHTML = `<a class="logo" href="#/">Rug<span>o</span></a>
     <nav class="nav">${tab("#/categories", "Categories", "cat")}${tab("#/calendar", "Calendar", "cal")}</nav>
-    <div class="spacer"></div><div class="auth">${right}</div>`;
+    <div class="spacer"></div><div class="auth">${right}${gear}</div>`;
   document.getElementById("signinBtn")?.addEventListener("click", () => openLogin("signin"));
   document.getElementById("signupBtn")?.addEventListener("click", () => openLogin("signup"));
   document.getElementById("av")?.addEventListener("click", (e) => {
@@ -443,10 +559,11 @@ function header(active) {
     if (old) return old.remove();
     const m = document.createElement("div");
     m.className = "menu";
-    m.innerHTML = `<div>@${esc(me.username)}${isStaff() ? ` · <span class="staff">${me.role.toUpperCase()}</span>` : ""}</div>${isStaff() ? `<button id="modLink">🛡️ Moderation</button>` : ""}<button id="out">Sign out</button>`;
+    m.innerHTML = `<div>@${esc(me.username)}${isStaff() ? ` · <span class="staff">${me.role.toUpperCase()}</span>` : ""}</div><button id="setLink">⚙️ Settings</button>${isStaff() ? `<button id="modLink">🛡️ Moderation</button>` : ""}<button id="out">Sign out</button>`;
     document.body.appendChild(m);
     m.querySelector("#out").onclick = () => { m.remove(); logout(); };
     m.querySelector("#modLink")?.addEventListener("click", () => { m.remove(); location.hash = "#/mod"; });
+    m.querySelector("#setLink").addEventListener("click", () => { m.remove(); location.hash = "#/settings"; });
     setTimeout(() => document.addEventListener("click", () => m.remove(), { once:true }));
   });
 }
@@ -464,6 +581,7 @@ function route() {
   if (h === "#/categories") return showCategories();
   if (h === "#/mychats") return showMyChats();
   if (h === "#/mod") return showModPanel();
+  if (h === "#/settings") return showSettings();
   if (h === "#/calendar") return showCalendar(null);
   if ((m = h.match(/^#\/g\/([^/]+)\/calendar$/))) return showCalendar(m[1]);
   if ((m = h.match(/^#\/g\/([^/]+)$/))) return showGenre(m[1]);
@@ -477,34 +595,107 @@ const genreById = (id) => genres.find((g) => g.id === id);
 // ---------- Inicio: lo que está EN VIVO, lo más popular primero ----------
 async function showHome() {
   header("home");
-  app.innerHTML = `<main class="wide"><div class="home-head"><h2><span class="dot"></span> Live now</h2><small id="liveCount"></small></div><div class="banners" id="live"></div></main>`;
-  const draw = async () => {
+  app.innerHTML = `<main class="wide home">
+    <section class="h-sec">
+      <div class="h-head"><h2><span class="dot"></span> Live now</h2><div class="h-right"><small id="liveCount"></small>
+        <button class="arrow" id="prev" aria-label="Previous">‹</button><button class="arrow" id="next" aria-label="Next">›</button></div></div>
+      <div class="carousel" id="car"></div>
+      <div class="dots" id="dots"></div>
+    </section>
+    <section class="h-sec" id="soonSec" hidden><div class="h-head"><h2>⏰ Starting soon</h2><a class="see" href="#/calendar">Calendar ›</a></div><div class="row-scroll" id="soon"></div></section>
+    <section class="h-sec"><div class="h-head"><h2>Browse</h2><a class="see" href="#/categories">All ›</a></div><div class="row-scroll" id="browse"></div></section>
+    <section class="h-sec" id="movSec" hidden><div class="h-head"><h2>🍿 In theaters</h2><a class="see" href="#/g/theaters">See all ›</a></div><div class="row-scroll" id="movies"></div></section>
+    <section class="h-sec" id="bigSec" hidden><div class="h-head"><h2>🏆 Big events</h2><a class="see" href="#/calendar">Calendar ›</a></div><div class="big-list" id="big"></div></section>
+  </main>`;
+
+  const car = document.getElementById("car"), dots = document.getElementById("dots");
+  let sig = "", paused = false;
+  const slides = () => [...car.querySelectorAll(".banner")];
+  const current = () => Math.round(car.scrollLeft / ((slides()[0]?.offsetWidth || 1) + 12));
+  const go = (i) => { const sl = slides(); if (!sl.length) return; const n = (i + sl.length) % sl.length; car.scrollTo({ left: sl[n].offsetLeft - car.offsetLeft, behavior: "smooth" }); };
+  const drawDots = () => { const n = slides().length, c = current(); dots.innerHTML = n > 1 ? slides().map((_, i) => `<button class="${i === c ? "on" : ""}" data-i="${i}" aria-label="Slide ${i + 1}"></button>`).join("") : ""; };
+  car.addEventListener("scroll", () => { clearTimeout(car._t); car._t = setTimeout(drawDots, 80); });
+  dots.onclick = (e) => { const i = e.target.dataset.i; if (i != null) go(+i); };
+  document.getElementById("prev").onclick = () => go(current() - 1);
+  document.getElementById("next").onclick = () => go(current() + 1);
+  ["pointerenter", "touchstart", "focusin"].forEach((ev) => car.addEventListener(ev, () => (paused = true), { passive: true }));
+  car.addEventListener("pointerleave", () => (paused = false));
+
+  const drawLive = async () => {
     const [list] = await Promise.all([api("/api/live"), genres.length ? null : loadGenres()]);
-    const el = document.getElementById("live");
-    if (!el) return;
-    if (list.length) el.innerHTML = list.map((e, i) => banner(e, i === 0)).join("");
-    else {
-      // Nada en vivo: mostrar lo que empieza pronto, también como banners
-      const next = await api("/api/next");
-      el.innerHTML = `<div class="empty" style="grid-column:1/-1">Nothing is live right now. ${next.length ? "Here's what starts soon 👇" : `<br><br><a href="#/calendar">📅 See the calendar</a>`}</div>`
-        + next.map((e, i) => banner(e, i === 0)).join("");
-    }
+    if (!document.getElementById("car")) return;
     const n = list.reduce((t, e) => t + e.online, 0);
     document.getElementById("liveCount").textContent = list.length ? `${list.length} live${n ? ` · ${n} chatting` : ""}` : "";
+    // Solo redibujar si algo cambió (así no salta el carrusel)
+    const newSig = JSON.stringify(list.map((e) => [e.id, e.score, e.detail, e.online]));
+    if (newSig === sig) return;
+    sig = newSig;
+    const keep = car.scrollLeft;
+    car.innerHTML = list.length ? list.map((e, i) => banner(e, false, i === 0)).join("")
+      : `<div class="empty" style="flex:1">Nothing is live right now. Check what's starting soon below 👇</div>`;
+    car.scrollLeft = keep;
+    document.querySelectorAll(".arrow").forEach((a) => (a.style.display = list.length > 1 ? "" : "none"));
+    drawDots();
   };
-  await draw();
-  timer = setInterval(draw, 30000); // se actualiza solo cada 30 segundos
+
+  const drawRest = async () => {
+    const region = (() => { try { return localStorage.getItem("region") || "US"; } catch { return "US"; } })();
+    const [events, mv] = await Promise.all([api("/api/events"), api("/api/movies?region=" + region).catch(() => null)]);
+    if (!document.getElementById("soon")) return;
+    const now = Date.now();
+    // Empieza pronto: partidos y eventos de las próximas 24 horas
+    const soon = events.filter((e) => e.state === "upcoming" && !e.allDay && new Date(e.start) - now < 24 * 3600e3).slice(0, 12);
+    document.getElementById("soonSec").hidden = !soon.length;
+    document.getElementById("soon").innerHTML = soon.map(miniCard).join("");
+    // Categorías
+    document.getElementById("browse").innerHTML = genres.map((g) => `<a class="cat-chip" href="#/g/${g.id}" style="--c:${g.color}"><span class="e">${g.emoji}</span><span><b>${esc(g.name)}</b><small>${g.id === "theaters" ? (g.showing ? `${g.showing} movies` : "Movies") : g.live ? `<span class="badge-live"><span class="dot"></span>${g.live} live</span>` : "Browse"}</small></span></a>`).join("");
+    // Películas
+    const movies = mv?.movies?.slice(0, 12) || [];
+    document.getElementById("movSec").hidden = !movies.length;
+    document.getElementById("movies").innerHTML = movies.map((m) => `<a class="mini-poster" href="#/room/${encodeURIComponent(m.id)}"><div class="img" style="${m.poster ? `background-image:url('${esc(m.poster)}')` : ""}">${m.poster ? "" : "🎬"}${m.online ? `<span class="cnt">👥 ${m.online}</span>` : ""}</div><div class="t">${esc(m.title)}</div></a>`).join("");
+    // Grandes eventos (Oscars, Grammys, Super Bowl…)
+    const big = events.filter((e) => e.special && !e.allDay && e.state === "upcoming").slice(0, 5);
+    document.getElementById("bigSec").hidden = !big.length;
+    document.getElementById("big").innerHTML = big.map((e) => {
+      const d = new Date(e.start), g = genreById(e.genre);
+      return `<a class="big-row" href="#/room/${encodeURIComponent(e.id)}"><div class="date"><small>${d.toLocaleDateString("en-US", { month:"short" })}</small><b>${d.getDate()}</b></div>
+        <div class="body"><b>${esc(e.title)}</b><small>${g ? g.emoji + " " : ""}${esc(e.league)} · ${d.toLocaleDateString("en-US", { weekday:"short" })} ${hora(e.start)}</small></div>
+        <span class="see">${favs.has(e.id) ? "★" : "›"}</span></a>`;
+    }).join("");
+  };
+
+  await drawLive();
+  drawRest();
+  let tick = 0;
+  timer = setInterval(() => {
+    tick++;
+    // El carrusel avanza cada 7 s; lo en vivo se actualiza cada ~30 s y el resto cada ~2 min
+    if (!paused && document.visibilityState === "visible" && slides().length > 1) go(current() + 1);
+    if (tick % 4 === 0) drawLive();
+    if (tick % 17 === 0) drawRest();
+  }, 7000);
+}
+
+// Tarjeta pequeña para "Starting soon"
+function miniCard(e) {
+  const t = e.teams;
+  const logo = (x) => `<span class="ml">${x.logo ? `<img src="${esc(x.logo)}" alt="" loading="lazy" onerror="this.remove()">` : ""}<i>${esc(x.abbr || "")}</i></span>`;
+  return `<a class="mini" href="#/room/${encodeURIComponent(e.id)}" style="--a:${esc(t?.[0]?.color || genreById(e.genre)?.color || "#9b5cff")};--b:${esc(t?.[1]?.color || "#333")}">
+    <div class="mini-top"><span>${esc(e.league)}</span><b>${hora(e.start)}</b></div>
+    ${t && t.length === 2 ? `<div class="mini-teams">${logo(t[0])}<span class="vs">vs</span>${logo(t[1])}</div><div class="mini-name">${esc(t[0].name)} vs ${esc(t[1].name)}</div>`
+      : `<div class="mini-teams"><span class="ml big">${genreById(e.genre)?.emoji || "📅"}</span></div><div class="mini-name">${esc(e.title)}</div>`}
+  </a>`;
 }
 
 // Banner de la portada. Partidos: cada mitad con el color y logo de un equipo.
-function banner(e, hero) {
+function banner(e, hero, trending) {
   const g = genreById(e.genre);
   const tag = e.state === "upcoming" ? `<span class="bn-tag">⏰ ${esc(new Date(e.start).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" }))}</span>`
     : e.always ? `<span class="bn-tag">💬 ALWAYS OPEN</span>`
     : e.ongoing ? `<span class="bn-tag">🍿 IN THEATERS</span>`
     : e.state === "post" ? `<span class="bn-tag final">🏁 FINAL</span>`
     : `<span class="bn-tag live"><span class="dot"></span>LIVE</span>`;
-  const top = `<div class="bn-top"><div class="bn-tags">${tag}${hero && e.online ? `<span class="bn-tag trend">🔥 TRENDING</span>` : ""}${e.ongoing ? (e.rating ? `<span class="bn-tag">★ ${e.rating}</span>` : "") : e.always ? "" : `<span class="bn-tag">${esc(e.league)}${e.detail && e.state !== "upcoming" ? ` · ${esc(e.detail)}` : ""}</span>`}</div>
+  const top = `<div class="bn-top"><div class="bn-tags">${tag}${(hero || trending) && e.online ? `<span class="bn-tag trend">🔥<span class="tx"> TRENDING</span></span>` : ""}${e.ongoing ? (e.rating ? `<span class="bn-tag">★ ${e.rating}</span>` : "") : e.always ? "" : `<span class="bn-tag">${esc(e.league)}${e.detail && e.state !== "upcoming" ? ` · ${esc(e.detail)}` : ""}</span>`}</div>
     <span class="bn-tag">👥 ${e.online}</span></div>`;
   const join = `<span class="bn-join">${e.state === "upcoming" ? "Pregame chat" : e.online ? "Join chat" : "Start the chat"} →</span>`;
   const t = e.teams;
@@ -579,6 +770,117 @@ async function showMyChats() {
     showMyChats();
   };
   header("my");
+}
+
+// ---------- Settings ----------
+function toast(t) {
+  document.querySelector(".saved-toast")?.remove();
+  const d = document.createElement("div");
+  d.className = "saved-toast"; d.textContent = t;
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1600);
+}
+
+async function showSettings() {
+  header("set");
+  const signed = cfg.auth && me?.username;
+  const sw = (id, on) => `<label class="switch"><input type="checkbox" id="${id}" ${on ? "checked" : ""}><span></span></label>`;
+  const seg = (id, opts, val) => `<div class="seg" id="${id}">${opts.map(([v, l]) => `<button data-v="${v}" class="${v === val ? "on" : ""}">${l}</button>`).join("")}</div>`;
+  let region = "US";
+  try { region = localStorage.getItem("region") || "US"; } catch {}
+  const color = me?.nameColor || null;
+  const joined = me?.joined ? new Date(me.joined).toLocaleDateString("en-US", { month:"long", year:"numeric" }) : "";
+  const provider = me?.provider ? me.provider[0].toUpperCase() + me.provider.slice(1) : "";
+
+  app.innerHTML = `<main><h1>⚙️ Settings</h1>
+    ${signed ? `<div class="set-sec"><h2>Profile</h2><div class="set-card">
+      <div class="prof"><div class="big-av" id="pAv"></div>
+        <div><b>@${esc(me.username)}</b>${isStaff() ? ` <span class="staff">${me.role.toUpperCase()}</span>` : ""}<small>${joined ? "Member since " + joined : ""}</small></div></div>
+      ${me.photo ? `<div class="set-row"><div class="lbl2"><b>Show my photo</b><small>Use your ${esc(provider || "account")} photo in chats</small></div>${sw("showPhoto", me.showPhoto)}</div>` : ""}
+      <div class="set-row" style="border-bottom:0"><div class="lbl2"><b>Name color</b><small>How your name looks in chats</small></div></div>
+      <div class="swatches" id="sw"><button class="sw auto ${!color ? "on" : ""}" data-c="" title="Automatic"></button>${NAME_COLORS.map((c) => `<button class="sw ${c === color ? "on" : ""}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join("")}</div>
+      <div class="preview" id="pv"></div>
+    </div></div>`
+    : cfg.auth ? `<div class="set-sec"><div class="join-card" style="margin:0"><div><b>Create your profile</b><span>Pick a username, a name color and save your favorite chats.</span></div><button class="btn" id="su">Sign up</button></div></div>` : ""}
+
+    <div class="set-sec"><h2>Chat</h2><div class="set-card">
+      <div class="set-row"><div class="lbl2"><b>Floating reactions</b><small>Show 🔥 😱 👏 floating over the chat</small></div>${sw("pReact", prefs.reactions)}</div>
+      <div class="set-row"><div class="lbl2"><b>Show message times</b><small>Time next to each name</small></div>${sw("pTime", prefs.timestamps)}</div>
+      <div class="set-row"><div class="lbl2"><b>Compact messages</b><small>Smaller photos, more messages on screen</small></div>${sw("pCompact", prefs.compact)}</div>
+      <div class="set-row"><div class="lbl2"><b>Text size</b></div>${seg("pSize", [["s", "A"], ["m", "A+"], ["l", "A++"]], prefs.textSize)}</div>
+    </div></div>
+
+    <div class="set-sec"><h2>Movies</h2><div class="set-card">
+      <div class="set-row"><div class="lbl2"><b>Country for “In Theaters”</b><small>Which movie listings you see first</small></div>${seg("pRegion", [["US", "🇺🇸 US"], ["PR", "🇵🇷 PR"]], region)}</div>
+    </div></div>
+
+    ${signed ? `<div class="set-sec"><h2>Account</h2><div class="set-card">
+      <div class="set-row"><div class="lbl2"><b>Email</b><small>${esc(me.email || "—")}${provider ? ` · Signed in with ${esc(provider)}` : ""}</small></div></div>
+      <div class="set-row"><div class="lbl2"><b>Sign out</b><small>On this device</small></div><button class="set-btn" id="so">Sign out</button></div>
+      <div class="set-row"><div class="lbl2"><b>Delete account</b><small>Removes your profile and saved chats forever</small></div><button class="set-btn danger" id="del">Delete</button></div>
+    </div></div>` : ""}
+
+    <div class="set-sec"><h2>About</h2><div class="set-card">
+      <a class="set-link" href="/privacy.html" target="_blank"><span>Privacy Policy</span><span>›</span></a>
+      <a class="set-link" href="mailto:contacto@rugo.chat"><span>Contact us</span><span>›</span></a>
+    </div><p class="legal" style="text-align:center;margin-top:16px">Rugo 🦁 · Live chat for every event</p></div>
+  </main>`;
+
+  // Chat (se guarda en este aparato)
+  const bindSw = (id, key) => document.getElementById(id).addEventListener("change", (e) => { prefs[key] = e.target.checked; savePrefs(); toast("Saved ✓"); });
+  bindSw("pReact", "reactions"); bindSw("pTime", "timestamps"); bindSw("pCompact", "compact");
+  const bindSeg = (id, fn) => document.getElementById(id).addEventListener("click", (e) => {
+    const b = e.target.closest("[data-v]"); if (!b) return;
+    e.currentTarget.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    fn(b.dataset.v); toast("Saved ✓");
+  });
+  bindSeg("pSize", (v) => { prefs.textSize = v; savePrefs(); });
+  bindSeg("pRegion", (v) => { try { localStorage.setItem("region", v); } catch {} });
+  document.getElementById("su")?.addEventListener("click", () => openLogin("signup"));
+  if (!signed) return;
+
+  // Perfil (se guarda en la cuenta)
+  const drawProfile = () => {
+    const c = me.nameColor || colorFor(me.username);
+    const av = document.getElementById("pAv");
+    av.style.backgroundImage = me.showPhoto && me.photo ? `url('${me.photo}')` : "";
+    av.style.color = c; av.textContent = me.showPhoto && me.photo ? "" : me.username[0].toUpperCase();
+    document.getElementById("pv").innerHTML = `<b style="color:${esc(c)}">${esc(me.username)}</b> <span style="color:#dcdce4">What a game! 🔥</span>`;
+  };
+  const save = async (body) => {
+    const r = await fetch("/api/profile", { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify(body) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { alert(d.error || "Could not save"); return false; }
+    toast("Saved ✓"); return true;
+  };
+  drawProfile();
+  document.getElementById("sw").onclick = async (e) => {
+    const b = e.target.closest("[data-c]"); if (!b) return;
+    const c = b.dataset.c || null;
+    if (await save({ nameColor: c })) {
+      me.nameColor = c;
+      document.querySelectorAll("#sw .sw").forEach((x) => x.classList.toggle("on", x === b));
+      drawProfile();
+    }
+  };
+  document.getElementById("showPhoto")?.addEventListener("change", async (e) => {
+    const on = e.target.checked;
+    if (await save({ showPhoto: on })) { me.showPhoto = on; me.avatar = on ? me.photo : null; drawProfile(); header("set"); }
+    else e.target.checked = !on;
+  });
+  document.getElementById("so").onclick = logout;
+  document.getElementById("del").onclick = async () => {
+    const typed = prompt(`This deletes your account forever, including your saved chats.\n\nType your username (${me.username}) to confirm:`);
+    if (typed === null) return;
+    if (typed.trim().toLowerCase() !== me.username.toLowerCase()) return alert("The username didn't match. Nothing was deleted.");
+    const r = await fetch("/api/account", { method: "DELETE", headers: authHeader() });
+    if (!r.ok) return alert((await r.json().catch(() => ({}))).error || "Could not delete the account.");
+    await sb.auth.signOut().catch(() => {});
+    session = null; me = null; favs = new Set();
+    alert("Your account was deleted.");
+    location.hash = "#/";
+    route();
+  };
 }
 
 // ---------- Moderación ----------
@@ -817,7 +1119,7 @@ async function showRoom(id) {
     const text = esc(m.text).replace(/@([A-Za-z0-9_]{3,20})/g, '<span class="at">@$1</span>');
     return `<div class="msg ${grouped ? "grouped" : ""} ${mine ? "mine" : ""} ${mention ? "mention" : ""}" data-id="${esc(m.id)}" data-uid="${esc(m.uid || "")}" data-name="${esc(m.name)}">
       ${grouped ? `<div class="av-space"></div>` : avatarHtml(m)}
-      <div class="bubble">${grouped ? "" : `<div class="who"><b style="color:${colorFor(m.name)}">${esc(m.name)}</b>${m.role ? `<span class="staff">${m.role === "admin" ? "ADMIN" : "MOD"}</span>` : ""}<time>${timeOf(m.at)}</time></div>`}<div class="txt">${text}</div></div>
+      <div class="bubble">${grouped ? "" : `<div class="who"><b style="color:${esc(m.color || colorFor(m.name))}">${esc(m.name)}</b>${m.role ? `<span class="staff">${m.role === "admin" ? "ADMIN" : "MOD"}</span>` : ""}<time>${timeOf(m.at)}</time></div>`}<div class="txt">${text}</div></div>
       ${isStaff() && !mine ? `<button class="mod-btn" aria-label="Moderate">⋯</button>` : ""}
     </div>`;
   };
@@ -832,7 +1134,7 @@ async function showRoom(id) {
   // Reacciones flotantes
   const floats = document.getElementById("floats");
   const floatEmoji = (emoji) => {
-    if (floats.childElementCount > 40) return;
+    if (!prefs.reactions || floats.childElementCount > 40) return;
     const el = document.createElement("span");
     el.className = "float";
     el.textContent = emoji;
@@ -945,6 +1247,7 @@ function askName(done) {
   document.getElementById("nm").focus();
 }
 
+applyPrefs();
 initAuth().finally(route);
 </script>
 </body>
