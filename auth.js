@@ -28,6 +28,38 @@ async function userFromToken(token) {
   return entry;
 }
 
+// Avatares de la galería de Rugo (archivos en public/avatars/<id>.svg)
+const PRESETS = ["lion", "tiger", "eagle", "shark", "wolf", "bear", "fox", "goat", "fire", "crown", "basketball", "soccer", "football", "baseball", "popcorn", "gamepad", "music", "star"];
+
+// La foto que se muestra en los chats según lo que eligió la persona
+function providerPhoto(p, user) {
+  return user?.user_metadata?.avatar_url || user?.user_metadata?.picture || p?.avatar_url || null;
+}
+function effectiveAvatar(p, user) {
+  const kind = p?.avatar_kind || (p?.show_photo === false ? "none" : "provider");
+  if (kind === "upload" && p.custom_avatar) return p.custom_avatar;
+  if (kind === "preset" && PRESETS.includes(p.custom_avatar)) return `/avatars/${p.custom_avatar}.svg`;
+  if (kind === "provider") return providerPhoto(p, user);
+  return null;
+}
+const forget = (uid) => { for (const [k, v] of cache) if (v.user.id === uid) cache.delete(k); };
+
+// Quitar la foto subida (la persona o un moderador)
+async function deleteUploaded(p) {
+  if (p?.avatar_path) await admin.storage.from("avatars").remove([p.avatar_path]).catch(() => {});
+}
+async function removePhoto(uid, blockUploads) {
+  const { data: p } = await admin.from("profiles").select("*").eq("id", uid).maybeSingle();
+  await deleteUploaded(p);
+  const changes = { avatar_kind: "none", custom_avatar: null, avatar_path: null };
+  if (blockUploads) changes.photo_banned = true;
+  const { error } = await admin.from("profiles").update(changes).eq("id", uid);
+  if (error) throw new Error(/column/.test(error.message || "") ? "Run the new SQL for profile pictures first." : "Could not remove the photo.");
+  forget(uid);
+}
+
+let onAvatarChange = () => {};
+
 // Colores que se pueden elegir para el nombre en el chat
 const NAME_COLORS = ["#ff6b6b", "#ff9f43", "#feca57", "#1dd1a1", "#48dbfb", "#54a0ff", "#9b5cff", "#ff6bcb", "#c8d6e5"];
 
@@ -50,11 +82,12 @@ function routes(app) {
     const me = await userFromToken(bearer(req));
     if (!me) return res.status(401).json({ error: "Not signed in" });
     const p = me.profile || {};
-    const photo = p.avatar_url || me.user.user_metadata?.avatar_url || null;
     res.json({
       id: me.user.id, username: p.username || null, role: p.role || "user",
-      avatar: p.show_photo === false ? null : photo, photo,
-      showPhoto: p.show_photo !== false, nameColor: p.name_color || null,
+      avatar: effectiveAvatar(p, me.user), photo: providerPhoto(p, me.user),
+      avatarKind: p.avatar_kind || (p.show_photo === false ? "none" : "provider"),
+      preset: p.avatar_kind === "preset" ? p.custom_avatar : null, presets: PRESETS,
+      photoBanned: Boolean(p.photo_banned), nameColor: p.name_color || null,
       email: me.user.email || null, provider: me.user.app_metadata?.provider || null,
       joined: p.created_at || me.user.created_at || null,
     });
@@ -71,20 +104,66 @@ function routes(app) {
       if (c !== null && !NAME_COLORS.includes(c)) return res.status(400).json({ error: "Invalid color" });
       changes.name_color = c;
     }
-    if ("showPhoto" in (req.body || {})) changes.show_photo = Boolean(req.body.showPhoto);
+    if ("avatarKind" in (req.body || {})) {
+      const kind = req.body.avatarKind;
+      if (kind === "preset") {
+        if (!PRESETS.includes(req.body.preset)) return res.status(400).json({ error: "Invalid avatar" });
+        changes.custom_avatar = req.body.preset;
+      } else if (kind === "provider" || kind === "none") changes.custom_avatar = null;
+      else return res.status(400).json({ error: "Invalid option" });
+      changes.avatar_kind = kind;
+      changes.avatar_path = null;
+      await deleteUploaded(me.profile);
+    }
     const { error } = await admin.from("profiles").update(changes).eq("id", me.user.id);
     if (error) {
       console.error("Profile update failed:", error.code, error.message);
       return res.status(500).json({ error: /column/.test(error.message || "") ? "Settings need a database update (run the new SQL)." : "Could not save. Please try again." });
     }
-    for (const [k, v] of cache) if (v.user.id === me.user.id) cache.delete(k);
+    forget(me.user.id);
+    if (changes.avatar_kind) onAvatarChange(me.user.id, effectiveAvatar({ ...me.profile, ...changes }, me.user));
     res.json({ ok: true });
+  });
+
+  // Subir foto de perfil (el navegador ya la recortó a 256×256 JPEG)
+  const lastUpload = new Map();
+  app.post("/api/avatar", require("express").json({ limit: "700kb" }), async (req, res) => {
+    const me = await userFromToken(bearer(req));
+    if (!me?.profile?.username) return res.status(401).json({ error: "Not signed in" });
+    if (me.profile.photo_banned) return res.status(403).json({ error: "A moderator turned off photo uploads for your account." });
+    if (Date.now() - (lastUpload.get(me.user.id) || 0) < 10000) return res.status(429).json({ error: "Please wait a few seconds and try again." });
+    const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(req.body?.image || "");
+    if (!m) return res.status(400).json({ error: "Please choose a JPG or PNG image." });
+    const buf = Buffer.from(m[2], "base64");
+    const magic = buf.subarray(0, 4).toString("hex");
+    const okType = magic.startsWith("ffd8") || magic === "89504e47" || buf.subarray(8, 12).toString() === "WEBP";
+    if (!okType || buf.length > 500 * 1024) return res.status(400).json({ error: "That image can't be used. Try another one." });
+    lastUpload.set(me.user.id, Date.now());
+
+    const ext = m[1] === "jpeg" ? "jpg" : m[1];
+    const path = `${me.user.id}/${Date.now()}.${ext}`;
+    const up = await admin.storage.from("avatars").upload(path, buf, { contentType: "image/" + m[1], cacheControl: "31536000", upsert: false });
+    if (up.error) {
+      console.error("Avatar upload failed:", up.error.message);
+      return res.status(500).json({ error: /bucket/i.test(up.error.message || "") ? "Photo storage is not set up yet (run the new SQL)." : "Upload failed. Please try again." });
+    }
+    const url = admin.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+    await deleteUploaded(me.profile);
+    const { error } = await admin.from("profiles").update({ avatar_kind: "upload", custom_avatar: url, avatar_path: path }).eq("id", me.user.id);
+    if (error) {
+      console.error("Avatar save failed:", error.message);
+      return res.status(500).json({ error: /column/.test(error.message || "") ? "Run the new SQL for profile pictures first." : "Could not save. Please try again." });
+    }
+    forget(me.user.id);
+    onAvatarChange(me.user.id, url);
+    res.json({ ok: true, avatar: url });
   });
 
   // Borrar mi cuenta (para siempre)
   app.delete("/api/account", async (req, res) => {
     const me = await userFromToken(bearer(req));
     if (!me) return res.status(401).json({ error: "Not signed in" });
+    await deleteUploaded(me.profile);
     const { error } = await admin.auth.admin.deleteUser(me.user.id);
     if (error) {
       console.error("Account delete failed:", error.message);
@@ -119,4 +198,7 @@ function routes(app) {
   });
 }
 
-module.exports = { enabled, userFromToken, routes, admin, NAME_COLORS };
+module.exports = {
+  enabled, userFromToken, routes, admin, NAME_COLORS, PRESETS, effectiveAvatar, removePhoto,
+  onAvatar: (fn) => { onAvatarChange = fn; },
+};

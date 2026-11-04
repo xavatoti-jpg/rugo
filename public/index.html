@@ -264,6 +264,20 @@
   .set-link:last-child { border-bottom:0; }
   .set-link:hover { background:#ffffff06; }
   .saved-toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#2ecc71; color:#0b2; color:#062; font-weight:800; padding:8px 16px; border-radius:999px; z-index:40; animation:msgIn .2s; }
+  .pic-opts { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px; padding:0 16px 12px; }
+  .pic-opt { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-weight:600; font-size:14px; text-align:left; }
+  .pic-opt:hover { border-color:var(--muted); }
+  .pic-opt.on { border-color:var(--accent); box-shadow:0 0 0 2px #9b5cff44; }
+  .pic-opt .pi { width:30px; height:30px; border-radius:50%; display:grid; place-items:center; background:#ffffff10 center/cover; font-size:16px; flex-shrink:0; }
+  .pic-opt .pi.letter { font-weight:800; font-size:14px; }
+  .presets[hidden] { display:none; }
+  .presets { display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; padding:0 16px 14px; }
+  .pre { aspect-ratio:1; border-radius:50%; border:2px solid transparent; background:center/cover; cursor:pointer; transition:transform .12s; }
+  .pre:hover { transform:scale(1.08); }
+  .pre.on { border-color:#fff; box-shadow:0 0 0 2px var(--accent); }
+  .up-status { padding:0 16px; font-size:13px; color:var(--muted); }
+  .up-status:not(:empty) { padding-bottom:12px; }
+
   /* Preferencias del chat */
   body.compact .msg { padding-top:2px; gap:8px; }
   body.compact .av, body.compact .av-space { width:22px; height:22px; font-size:11px; }
@@ -781,6 +795,28 @@ function toast(t) {
   setTimeout(() => d.remove(), 1600);
 }
 
+// Recorta la imagen al centro en cuadrado y la hace pequeña (en el mismo aparato, antes de subirla)
+function squareImage(file, size) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) return reject(new Error("Please choose an image."));
+    if (file.size > 15 * 1024 * 1024) return reject(new Error("That image is too big (max 15 MB)."));
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const side = Math.min(img.naturalWidth, img.naturalHeight);
+      const c = document.createElement("canvas");
+      c.width = c.height = size;
+      const ctx = c.getContext("2d");
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL("image/jpeg", 0.86));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("This image format isn't supported. Try a JPG or PNG.")); };
+    img.src = url;
+  });
+}
+
 async function showSettings() {
   header("set");
   const signed = cfg.auth && me?.username;
@@ -796,7 +832,15 @@ async function showSettings() {
     ${signed ? `<div class="set-sec"><h2>Profile</h2><div class="set-card">
       <div class="prof"><div class="big-av" id="pAv"></div>
         <div><b>@${esc(me.username)}</b>${isStaff() ? ` <span class="staff">${me.role.toUpperCase()}</span>` : ""}<small>${joined ? "Member since " + joined : ""}</small></div></div>
-      ${me.photo ? `<div class="set-row"><div class="lbl2"><b>Show my photo</b><small>Use your ${esc(provider || "account")} photo in chats</small></div>${sw("showPhoto", me.showPhoto)}</div>` : ""}
+      <div class="set-row" style="border-bottom:0"><div class="lbl2"><b>Profile picture</b><small>${me.photoBanned ? "Photo uploads were turned off by a moderator" : "Upload a photo or pick a Rugo avatar"}</small></div></div>
+      <div class="pic-opts" id="picOpts">
+        ${me.photoBanned ? "" : `<label class="pic-opt ${me.avatarKind === "upload" ? "on" : ""}"><input type="file" accept="image/*" id="upFile" hidden><span class="pi">📷</span>Upload photo</label>`}
+        <button class="pic-opt ${me.avatarKind === "preset" ? "on" : ""}" data-k="preset"><span class="pi">🎨</span>Rugo avatar</button>
+        ${me.photo ? `<button class="pic-opt ${me.avatarKind === "provider" ? "on" : ""}" data-k="provider"><span class="pi" style="background-image:url('${esc(me.photo)}')"></span>${esc(provider || "Account")} photo</button>` : ""}
+        <button class="pic-opt ${me.avatarKind === "none" ? "on" : ""}" data-k="none"><span class="pi letter">${esc(me.username[0].toUpperCase())}</span>No photo</button>
+      </div>
+      <div class="presets" id="presets" ${me.avatarKind === "preset" ? "" : "hidden"}>${(me.presets || []).map((id) => `<button class="pre ${me.preset === id ? "on" : ""}" data-p="${id}" style="background-image:url('/avatars/${id}.svg')" aria-label="${id}"></button>`).join("")}</div>
+      <div class="up-status" id="upStatus"></div>
       <div class="set-row" style="border-bottom:0"><div class="lbl2"><b>Name color</b><small>How your name looks in chats</small></div></div>
       <div class="swatches" id="sw"><button class="sw auto ${!color ? "on" : ""}" data-c="" title="Automatic"></button>${NAME_COLORS.map((c) => `<button class="sw ${c === color ? "on" : ""}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join("")}</div>
       <div class="preview" id="pv"></div>
@@ -843,8 +887,8 @@ async function showSettings() {
   const drawProfile = () => {
     const c = me.nameColor || colorFor(me.username);
     const av = document.getElementById("pAv");
-    av.style.backgroundImage = me.showPhoto && me.photo ? `url('${me.photo}')` : "";
-    av.style.color = c; av.textContent = me.showPhoto && me.photo ? "" : me.username[0].toUpperCase();
+    av.style.backgroundImage = me.avatar ? `url('${me.avatar}')` : "";
+    av.style.color = c; av.textContent = me.avatar ? "" : me.username[0].toUpperCase();
     document.getElementById("pv").innerHTML = `<b style="color:${esc(c)}">${esc(me.username)}</b> <span style="color:#dcdce4">What a game! 🔥</span>`;
   };
   const save = async (body) => {
@@ -863,10 +907,44 @@ async function showSettings() {
       drawProfile();
     }
   };
-  document.getElementById("showPhoto")?.addEventListener("change", async (e) => {
-    const on = e.target.checked;
-    if (await save({ showPhoto: on })) { me.showPhoto = on; me.avatar = on ? me.photo : null; drawProfile(); header("set"); }
-    else e.target.checked = !on;
+  // Foto de perfil
+  const markOpt = (k) => document.querySelectorAll("#picOpts .pic-opt").forEach((x) => x.classList.toggle("on", (x.dataset.k || "upload") === k));
+  const applied = (kind, avatar, preset) => {
+    me.avatarKind = kind; me.avatar = avatar; me.preset = preset || null; markOpt(kind); drawProfile(); header("set");
+    if (kind !== "preset") document.querySelectorAll("#presets .pre").forEach((x) => x.classList.remove("on"));
+  };
+  document.getElementById("picOpts").addEventListener("click", async (e) => {
+    const b = e.target.closest("button[data-k]");
+    if (!b) return;
+    const k = b.dataset.k;
+    if (k === "preset") { document.getElementById("presets").hidden = false; return; }
+    document.getElementById("presets").hidden = true;
+    if (await save({ avatarKind: k })) applied(k, k === "provider" ? me.photo : null);
+  });
+  document.getElementById("presets").onclick = async (e) => {
+    const b = e.target.closest("[data-p]");
+    if (!b) return;
+    if (await save({ avatarKind: "preset", preset: b.dataset.p })) {
+      document.querySelectorAll("#presets .pre").forEach((x) => x.classList.toggle("on", x === b));
+      applied("preset", `/avatars/${b.dataset.p}.svg`, b.dataset.p);
+    }
+  };
+  document.getElementById("upFile")?.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const st = document.getElementById("upStatus");
+    st.textContent = "Uploading…";
+    try {
+      const image = await squareImage(file, 256);
+      const r = await fetch("/api/avatar", { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify({ image }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "Upload failed");
+      st.textContent = "";
+      document.getElementById("presets").hidden = true;
+      applied("upload", d.avatar);
+      toast("Photo updated ✓");
+    } catch (err) { st.textContent = "⚠️ " + err.message; }
   });
   document.getElementById("so").onclick = logout;
   document.getElementById("del").onclick = async () => {
@@ -893,6 +971,7 @@ function openModSheet(m) {
     <button data-a="delete">🗑️ Delete this message</button>
     ${acct ? `<div class="lbl">Mute in this chat</div>
     <div class="row3"><button data-a="mute" data-m="5">5 min</button><button data-a="mute" data-m="60">1 hour</button><button data-a="mute" data-m="1440">24 hours</button></div>
+    <div class="row3" style="grid-template-columns:1fr 1fr"><button data-a="removephoto">🖼️ Remove photo</button><button data-a="removephoto" data-block="1">🖼️ Remove & block uploads</button></div>
     <button data-a="kick">👢 Remove from this chat</button>
     <button class="danger" data-a="ban">🚫 Remove & ban from this chat</button>
     <button class="danger big" data-a="globalban">⛔ Remove & ban from ALL chats</button>` : `<p class="q">This person has no account, so only their message can be deleted.</p>`}
@@ -910,7 +989,7 @@ function openModSheet(m) {
       if (!confirm(`Ban ${m.name} from ${where}?`)) return;
       reason = prompt("Reason (optional):", "") || null;
     }
-    socket?.emit("mod", { action, uid: m.uid || null, name: m.name, messageId: m.id, minutes: +btn.dataset.m || undefined, reason }, (r) => {
+    socket?.emit("mod", { action, uid: m.uid || null, name: m.name, messageId: m.id, minutes: +btn.dataset.m || undefined, reason, blockUploads: btn.dataset.block === "1" }, (r) => {
       if (r?.error) alert(r.error);
     });
     div.remove();
@@ -1234,6 +1313,12 @@ async function showRoom(id) {
   socket.on("system", (t) => { if (t) { lastName = null; add(`<div class="sys">⚠️ ${esc(t)}</div>`, true); } });
   socket.on("notice", (t) => { lastName = null; add(`<div class="sys notice">${esc(t)}</div>`, true); });
   socket.on("react", floatEmoji);
+  socket.on("avatar", ({ uid, avatar }) => {
+    msgs.querySelectorAll(`.msg[data-uid="${CSS.escape(uid)}"] .av`).forEach((el) => {
+      const name = el.closest(".msg").dataset.name;
+      el.outerHTML = avatarHtml({ name, avatar });
+    });
+  });
   socket.on("online", (n) => { const o = document.getElementById("online"); if (o) o.innerHTML = `<span class="dot green"></span>${n}`; });
 }
 

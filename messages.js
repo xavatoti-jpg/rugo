@@ -75,6 +75,13 @@ function removeByUser(roomId, uid) {
   return gone;
 }
 
+// Cambiar la foto de una persona en sus mensajes guardados
+function setAvatar(uid, avatar) {
+  for (const list of cache.values()) for (const m of list) if (m.uid === uid) m.avatar = avatar;
+  if (db()) db().from("messages").update({ avatar }).eq("user_id", uid)
+    .then(({ error }) => error && console.error("Avatar update in messages failed:", error.message));
+}
+
 // Limpieza: borrar mensajes de más de 7 días y vaciar la memoria de salas que ya no existen
 async function cleanup(activeRoomIds) {
   for (const id of cache.keys()) if (!activeRoomIds.has(id)) cache.delete(id);
@@ -83,4 +90,4 @@ async function cleanup(activeRoomIds) {
   if (error) console.error("Messages cleanup failed:", error.code, error.message);
 }
 
-module.exports = { recent, add, remove, removeByUser, cleanup, KEEP_DAYS };
+module.exports = { recent, add, remove, removeByUser, setAvatar, cleanup, KEEP_DAYS };

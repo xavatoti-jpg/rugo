@@ -10,6 +10,14 @@ const Mod = require("./mod");
 const crypto = require("crypto");
 Mod.start();
 
+// Cuando alguien cambia (o un mod quita) su foto: actualizarla en vivo en todos los chats
+function avatarChanged(uid, avatar) {
+  for (const x of io.sockets.sockets.values()) if (x.data.userId === uid) x.data.avatar = avatar;
+  Messages.setAvatar(uid, avatar);
+  io.emit("avatar", { uid, avatar });
+}
+Auth.onAvatar(avatarChanged);
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -178,7 +186,7 @@ io.on("connection", (socket) => {
         socket.data.name = me.profile.username;
         socket.data.userId = me.user.id;
         socket.data.role = me.profile.role || "user";
-        socket.data.avatar = me.profile.show_photo === false ? null : me.profile.avatar_url || me.user.user_metadata?.avatar_url || null;
+        socket.data.avatar = Auth.effectiveAvatar(me.profile, me.user);
         socket.data.color = me.profile.name_color || null;
       }
     } else {
@@ -261,6 +269,12 @@ io.on("connection", (socket) => {
         const label = mins === 5 ? "5 minutes" : mins === 60 ? "1 hour" : "24 hours";
         sockets.filter((x) => x.data.room === room).forEach((x) => x.emit("muted", { until: Date.now() + mins * 60e3, label }));
         io.to(room).emit("notice", `🔇 ${name} was muted for ${label}.`);
+        return done({ ok: true });
+      }
+
+      if (action === "removephoto") {
+        await Auth.removePhoto(uid, Boolean(req.blockUploads));
+        avatarChanged(uid, null);
         return done({ ok: true });
       }
 

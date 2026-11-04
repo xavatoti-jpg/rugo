@@ -78,3 +78,16 @@ create index if not exists messages_mid on public.messages (mid);
 alter table public.profiles add column if not exists name_color text;
 alter table public.profiles add column if not exists show_photo boolean not null default true;
 alter table public.messages add column if not exists color text;
+
+-- ============ Fotos de perfil ============
+alter table public.profiles add column if not exists avatar_kind text
+  check (avatar_kind in ('provider', 'upload', 'preset', 'none'));
+alter table public.profiles add column if not exists custom_avatar text;
+alter table public.profiles add column if not exists avatar_path text;
+alter table public.profiles add column if not exists photo_banned boolean not null default false;
+grant update on public.messages to service_role;
+
+-- Carpeta pública para las fotos subidas (máx. 500 KB, solo imágenes)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 512000, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do nothing;
