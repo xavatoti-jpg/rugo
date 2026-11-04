@@ -1,4 +1,4 @@
-# Rugo (prototipo)
+# Rugo — Live chat for anything
 
 Chat en vivo para cada evento: partidos de todas las ligas del día (automático, vía ESPN) y eventos especiales (Oscars, Grammys, Miss Universo…).
 
@@ -25,3 +25,6 @@ Sin esas variables, Rugo funciona en modo invitado (apodo sin cuenta).
 ## Movies in theaters (TMDB)
 Add `TMDB_TOKEN` (API Read Access Token from themoviedb.org) in Render → Environment.
 Listings for United States and Puerto Rico refresh every 6 hours. `TMDB_MOCK=1` uses sample movies for local testing.
+
+## Próximamente (roadmap)
+- **Chats creados por usuarios:** que cualquiera pueda crear un live chat de lo que sea (un show, un concierto, un evento local, una watch party), con nombre, categoría, fecha y link para compartir.

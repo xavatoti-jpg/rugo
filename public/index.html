@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rugo · Live chat for every event</title>
-<meta name="description" content="Chat live with fans around the world during every game, movie and show.">
+<title>Rugo · Live chat for anything</title>
+<meta name="description" content="Live chat for anything. Join the conversation during games, movies, award shows and more — live, with people around the world.">
 <link rel="icon" href="/brand/rugo-mark.svg" type="image/svg+xml">
 <link rel="icon" href="/brand/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
@@ -12,8 +12,8 @@
 <meta name="theme-color" content="#0e0e12">
 <meta name="apple-mobile-web-app-title" content="Rugo">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Rugo · Live chat for every event">
-<meta property="og:description" content="Chat live with fans around the world during every game, movie and show.">
+<meta property="og:title" content="Rugo · Live chat for anything">
+<meta property="og:description" content="Live chat for anything. Join the conversation during games, movies, award shows and more — live, with people around the world.">
 <meta property="og:url" content="https://rugo.chat/">
 <meta property="og:image" content="https://rugo.chat/brand/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -187,6 +187,15 @@
   .mod-item .k { font-size:22px; }
   .lift { background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:7px 12px; cursor:pointer; font-weight:700; font-size:13px; }
   .lift:hover { border-color:#2ecc71; color:#2ecc71; }
+
+  /* Titular de la portada */
+  .hero-line { margin:2px 0 18px; }
+  .hero-line h1 { font-size:28px; line-height:1.15; margin:0; letter-spacing:-.02em; font-weight:900; }
+  @media (min-width:720px) { .hero-line h1 { font-size:38px; } }
+  .hero-line .rot { display:inline-block; background:linear-gradient(90deg, #ffd166, #ff7a35 45%, #e84393 75%, #9b5cff); -webkit-background-clip:text; background-clip:text; color:transparent; transition:opacity .25s, transform .25s; }
+  .hero-line .rot.out { opacity:0; transform:translateY(8px); }
+  .hero-line .dotp { color:var(--accent); }
+  .hero-line p { margin:6px 0 0; color:var(--muted); font-size:15px; }
 
   /* Portada compacta */
   .home .h-sec { margin-bottom:26px; }
@@ -628,6 +637,8 @@ const genreById = (id) => genres.find((g) => g.id === id);
 async function showHome() {
   header("home");
   app.innerHTML = `<main class="wide home">
+    <div class="hero-line"><h1>Live chat for <span class="rot" id="rot">anything</span><span class="dotp">.</span></h1>
+      <p>Jump into the conversation with people around the world — right now.</p></div>
     <section class="h-sec">
       <div class="h-head"><h2><span class="dot"></span> Live now</h2><div class="h-right"><small id="liveCount"></small>
         <button class="arrow" id="prev" aria-label="Previous">‹</button><button class="arrow" id="next" aria-label="Next">›</button></div></div>
@@ -695,6 +706,17 @@ async function showHome() {
         <span class="see">${favs.has(e.id) ? "★" : "›"}</span></a>`;
     }).join("");
   };
+
+  // Palabra que va cambiando en el titular
+  const words = ["games", "movies", "award shows", "concerts", "reality TV", "anything"];
+  let wi = words.length - 1;
+  const rot = document.getElementById("rot");
+  const rotTimer = setInterval(() => {
+    if (!document.getElementById("rot")) return clearInterval(rotTimer);
+    wi = (wi + 1) % words.length;
+    rot.classList.add("out");
+    setTimeout(() => { rot.textContent = words[wi]; rot.classList.remove("out"); }, 260);
+  }, 2200);
 
   await drawLive();
   drawRest();
@@ -885,7 +907,7 @@ async function showSettings() {
     <div class="set-sec"><h2>About</h2><div class="set-card">
       <a class="set-link" href="/privacy.html" target="_blank"><span>Privacy Policy</span><span>›</span></a>
       <a class="set-link" href="mailto:contacto@rugo.chat"><span>Contact us</span><span>›</span></a>
-    </div><p class="legal" style="text-align:center;margin-top:16px">Rugo 🦁 · Live chat for every event</p></div>
+    </div><p class="legal" style="text-align:center;margin-top:16px">Rugo 🦁 · Live chat for anything</p></div>
   </main>`;
 
   // Chat (se guarda en este aparato)
