@@ -35,7 +35,6 @@
   .wm { font-size:21px; }
   .tagline { font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:.01em; margin-top:3px; white-space:nowrap; width:128px; overflow:hidden; }
   .tagline i { font-style:normal; display:inline-block; background:linear-gradient(90deg, #ffd166, #ff7a35 50%, #e84393); -webkit-background-clip:text; background-clip:text; color:transparent; transition:opacity .25s, transform .25s; }
-  .tagline i.out { opacity:0; transform:translateY(5px); }
   .logo:hover img { transform:rotate(-8deg) scale(1.08); }
   .logo b { color:var(--accent); font-weight:inherit; }
   .tab { padding:7px 11px; border-radius:999px; color:var(--muted); font-weight:600; font-size:14px; white-space:nowrap; }
@@ -583,17 +582,6 @@ function chooseUsername() {
 }
 
 // ================= Barra de arriba =================
-// Eslogan que cambia debajo del nombre: "live chat for games / movies / …"
-const TAG_WORDS = ["anything", "games", "movies", "award shows", "concerts", "reality TV", "watch parties"];
-let tagIdx = 0;
-setInterval(() => {
-  const el = document.getElementById("rotH");
-  tagIdx = (tagIdx + 1) % TAG_WORDS.length;
-  if (!el) return;
-  el.classList.add("out");
-  setTimeout(() => { el.textContent = TAG_WORDS[tagIdx]; el.classList.remove("out"); }, 250);
-}, 2400);
-
 function header(active) {
   requestAnimationFrame(() => document.documentElement.style.setProperty("--hdr", hdr.offsetHeight + "px"));
   const tab = (href, label, key) => `<a class="tab ${active === key ? "on" : ""}" href="${href}">${label}</a>`;
@@ -604,7 +592,7 @@ function header(active) {
       : `<button class="ghost-btn" id="signinBtn">Sign in</button><button class="login-btn" id="signupBtn">Sign up</button>`;
   }
   const gear = `<a class="gear ${active === "set" ? "on" : ""}" href="#/settings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>`;
-  hdr.innerHTML = `<a class="logo" href="#/" aria-label="Rugo home"><img src="/brand/rugo-mark.svg" alt="" width="34" height="34"><span class="wm-wrap"><span class="wm">Rug<b>o</b></span><small class="tagline">live chat for <i id="rotH">${esc(TAG_WORDS[tagIdx])}</i></small></span></a>
+  hdr.innerHTML = `<a class="logo" href="#/" aria-label="Rugo home"><img src="/brand/rugo-mark.svg" alt="" width="34" height="34"><span class="wm-wrap"><span class="wm">Rug<b>o</b></span><small class="tagline">live chat for <i>anything</i></small></span></a>
     <nav class="nav">${tab("#/categories", "Categories", "cat")}${tab("#/calendar", "Calendar", "cal")}${gear.replace('class="gear', 'class="gear g-mob')}</nav>
     <div class="spacer"></div><div class="auth">${right}${gear.replace('class="gear', 'class="gear g-desk')}</div>`;
   document.getElementById("signinBtn")?.addEventListener("click", () => openLogin("signin"));
