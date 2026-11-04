@@ -60,8 +60,33 @@ async function fetchLeagueDay(l, day) {
       state: st.state === "in" ? "live" : st.state === "post" ? "post" : "upcoming",
       detail: st.shortDetail || "",
       score: scoreOf(e),
+      teams: teamsOf(e, l.sport),
     };
   });
+}
+
+// Equipos para el banner: nombre, logo, color y marcador.
+// En fútbol se muestra primero el local ("Real Madrid vs Barcelona"); en EE.UU. el visitante ("Celtics at Lakers").
+function teamsOf(e, sport) {
+  const c = e.competitions?.[0]?.competitors;
+  if (!c || c.length !== 2) return null;
+  const pre = e.status?.type?.state === "pre";
+  const side = (x) => {
+    const t = x.team || x.athlete || {};
+    const hex = (v) => (/^[0-9a-f]{6}$/i.test(v || "") ? "#" + v : null);
+    return {
+      name: t.shortDisplayName || t.displayName || t.name || "",
+      abbr: t.abbreviation || (t.displayName || "").split(" ").map((w) => w[0]).join("").slice(0, 3).toUpperCase(),
+      logo: t.logo || t.logos?.[0]?.href || t.headshot?.href || t.flag?.href || null,
+      color: hex(t.color) || "#3a3a4a",
+      alt: hex(t.alternateColor),
+      score: pre ? null : x.score ?? null,
+      winner: Boolean(x.winner),
+    };
+  };
+  const home = c.find((x) => x.homeAway === "home") || c[0];
+  const away = c.find((x) => x.homeAway === "away") || c[1];
+  return sport === "soccer" ? [side(home), side(away)] : [side(away), side(home)];
 }
 
 function scoreOf(e) {
@@ -133,12 +158,15 @@ function generalRooms() {
 function sampleEvents() {
   const at = (h) => new Date(Date.now() + h * HOUR).toISOString();
   return [
-    { id: "demo-1", title: "Boston Celtics at Los Angeles Lakers", category: "Basketball", league: "NBA", start: at(-0.5), state: "live", detail: "2nd Quarter", score: "BOS 48 - 51 LAL" },
-    { id: "demo-2", title: "Real Madrid vs Barcelona", category: "Soccer", league: "LaLiga", start: at(-1), state: "live", detail: "67'", score: "RMA 1 - 1 BAR" },
+    { id: "demo-1", title: "Boston Celtics at Los Angeles Lakers", category: "Basketball", league: "NBA", start: at(-0.5), state: "live", detail: "2nd Quarter", score: "BOS 48 - 51 LAL",
+      teams: [{ name: "Celtics", abbr: "BOS", color: "#007a33", score: "48", logo: "https://a.espncdn.com/i/teamlogos/nba/500/bos.png" }, { name: "Lakers", abbr: "LAL", color: "#552583", score: "51", logo: "https://a.espncdn.com/i/teamlogos/nba/500/lal.png" }] },
+    { id: "demo-2", title: "Real Madrid vs Barcelona", category: "Soccer", league: "LaLiga", start: at(-1), state: "live", detail: "67'", score: "RMA 1 - 1 BAR",
+      teams: [{ name: "Real Madrid", abbr: "RMA", color: "#febe10", score: "1", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/86.png" }, { name: "Barcelona", abbr: "BAR", color: "#a50044", score: "1", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/83.png" }] },
     { id: "demo-3", title: "Miami Heat at New York Knicks", category: "Basketball", league: "NBA", start: at(3), state: "upcoming" },
     { id: "demo-4", title: "Chiefs at Eagles", category: "Football", league: "NFL", start: at(26), state: "upcoming" },
     { id: "demo-5", title: "Yankees at Dodgers", category: "Baseball", league: "MLB", start: at(50), state: "upcoming" },
-    { id: "demo-6", title: "Warriors at Suns", category: "Basketball", league: "NBA", start: at(-3), state: "post", detail: "Final", score: "GSW 112 - 108 PHX" },
+    { id: "demo-6", title: "Warriors at Suns", category: "Basketball", league: "NBA", start: at(-3), state: "post", detail: "Final", score: "GSW 112 - 108 PHX",
+      teams: [{ name: "Warriors", abbr: "GSW", color: "#1d428a", score: "112", winner: true, logo: "https://a.espncdn.com/i/teamlogos/nba/500/gs.png" }, { name: "Suns", abbr: "PHX", color: "#e56020", score: "108", logo: "https://a.espncdn.com/i/teamlogos/nba/500/phx.png" }] },
   ].map((e) => ({ genre: "sports", ...e }));
 }
 
