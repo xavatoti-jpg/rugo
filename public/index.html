@@ -4,6 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rugo · Live chat for every event</title>
+<meta name="description" content="Chat live with fans around the world during every game, movie and show.">
+<link rel="icon" href="/brand/rugo-mark.svg" type="image/svg+xml">
+<link rel="icon" href="/brand/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0e0e12">
+<meta name="apple-mobile-web-app-title" content="Rugo">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Rugo · Live chat for every event">
+<meta property="og:description" content="Chat live with fans around the world during every game, movie and show.">
+<meta property="og:url" content="https://rugo.chat/">
+<meta property="og:image" content="https://rugo.chat/brand/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://rugo.chat/brand/og-image.png">
 <style>
   :root { --bg:#0e0e12; --panel:#18181f; --panel2:#202029; --line:#2a2a35; --text:#ececf1; --muted:#9a9aa8; --accent:#9b5cff; --live:#ff4757; }
   * { box-sizing:border-box; }
@@ -13,8 +29,10 @@
 
   /* Barra de arriba */
   header { padding:10px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:6px; position:sticky; top:0; background:var(--bg); z-index:5; }
-  .logo { font-weight:800; font-size:21px; margin-right:6px; white-space:nowrap; }
-  .logo span { color:var(--accent); }
+  .logo { font-weight:900; font-size:21px; margin-right:6px; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; letter-spacing:-.02em; }
+  .logo img { width:30px; height:30px; transition:transform .25s; }
+  .logo:hover img { transform:rotate(-8deg) scale(1.08); }
+  .logo b { color:var(--accent); font-weight:inherit; }
   .tab { padding:7px 11px; border-radius:999px; color:var(--muted); font-weight:600; font-size:14px; white-space:nowrap; }
   .tab:hover { color:var(--text); background:var(--panel); }
   .tab.on { color:var(--text); background:var(--panel2); }
@@ -562,7 +580,7 @@ function header(active) {
       : `<button class="ghost-btn" id="signinBtn">Sign in</button><button class="login-btn" id="signupBtn">Sign up</button>`;
   }
   const gear = `<a class="gear ${active === "set" ? "on" : ""}" href="#/settings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>`;
-  hdr.innerHTML = `<a class="logo" href="#/">Rug<span>o</span></a>
+  hdr.innerHTML = `<a class="logo" href="#/" aria-label="Rugo home"><img src="/brand/rugo-mark.svg" alt="" width="30" height="30"><span class="wm">Rug<b>o</b></span></a>
     <nav class="nav">${tab("#/categories", "Categories", "cat")}${tab("#/calendar", "Calendar", "cal")}</nav>
     <div class="spacer"></div><div class="auth">${right}${gear}</div>`;
   document.getElementById("signinBtn")?.addEventListener("click", () => openLogin("signin"));
