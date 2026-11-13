@@ -17,6 +17,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 W, H = 1920, 1080
+VW, VH = 1080, 1920
 SR = 48000
 CREAM = (241, 232, 214)
 CREAM_BACK = (220, 208, 186)
@@ -452,6 +453,9 @@ def lin_path(path, t):
 # ---------------------------------------------------------------- scene
 class Scene:
     def __init__(self, sc, film):
+        self.vertical = film.get("_vertical", False)
+        if self.vertical and sc.get("v"):
+            sc = merge(sc, sc["v"])
         self.sc, self.film = sc, film
         self.dur = sc["duration"]
         self.set = sc.get("set", "void")
@@ -530,17 +534,20 @@ class Scene:
             paste(im, with_alpha(spr, a), (int(x - o[0]), int(y - o[1])))
             hand = (x + anc["ra"][0], y + anc["ra"][1])
         self.draw_props(im, t, front=True, hand=hand)
-        self.draw_text(im, t, enemy_head)
-        if self.set == "title":
-            self.draw_title(im, t)
-        # camera push + dip to black
-        push = sc.get("push", 0.035)
-        if push:
-            z = 1 + push * (t / self.dur)
-            cw, ch = W / z, H / z
-            fx, fy = sc.get("focus", (W / 2, H / 2))
-            x0 = min(max(fx - cw / 2, 0), W - cw); y0 = min(max(fy - ch / 2, 0), H - ch)
-            im = im.resize((W, H), Image.BILINEAR, box=(x0, y0, x0 + cw, y0 + ch))
+        if self.vertical:
+            im = self.to_vertical(im, t, enemy_head)
+        else:
+            self.draw_text(im, t, enemy_head)
+            if self.set == "title":
+                self.draw_title(im, t)
+            # camera push
+            push = sc.get("push", 0.035)
+            if push:
+                z = 1 + push * (t / self.dur)
+                cw, ch = W / z, H / z
+                fx, fy = sc.get("focus", (W / 2, H / 2))
+                x0 = min(max(fx - cw / 2, 0), W - cw); y0 = min(max(fy - ch / 2, 0), H - ch)
+                im = im.resize((W, H), Image.BILINEAR, box=(x0, y0, x0 + cw, y0 + ch))
         fi, fo = sc.get("fade_in", 0.25), sc.get("fade_out", 0.25)
         k = 1.0
         if fi: k *= min(1, t / fi)
@@ -723,6 +730,92 @@ class Scene:
         img = text_img(tc["punch"], "Inter-Bold.otf", 50, RED, glow=RED)
         paste(im, with_alpha(img, fade_at(t, 6.0, 0.8)), (int(W / 2 - img.width / 2), 760))
 
+    # ---------------------------------------------------------- 9:16 layout
+    def to_vertical(self, im, t, enemy_head):
+        """Crop a 9:16 window that pans per scene ("vpan": x or [[t,x],...]), upscale,
+        then lay text out natively at 1080x1920."""
+        sc = self.sc
+        vp = sc.get("vpan", sc.get("focus", (W / 2, H / 2))[0])
+        cx = vp if isinstance(vp, (int, float)) else interp_path(vp, t)[0]
+        z = 1 + sc.get("push", 0.035) * (t / self.dur)
+        cw, ch = H * 9 / 16 / z, H / z
+        fy = sc.get("vfocus_y", sc.get("focus", (W / 2, H / 2))[1])
+        x0 = min(max(cx - cw / 2, 0), W - cw); y0 = min(max(fy - ch / 2, 0), H - ch)
+        k = VH / ch
+        v = im.resize((VW, VH), Image.LANCZOS, box=(x0, y0, x0 + cw, y0 + ch))
+        M = lambda px, py: ((px - x0) * k, (py - y0) * k)
+        if self.set == "title":
+            self.draw_title_v(v, t)
+            return v
+        if sc.get("day"):
+            label = sc["day"]; cf = sc.get("day_from")
+            if cf is not None:
+                target = int(label.replace("DAY", "").replace(",", "").strip())
+                label = "DAY {:,}".format(int(round(cf + (target - cf) * ease((t - 0.3) / 0.9))))
+            a = fade_at(t, 0.1, 0.35)
+            img = text_img(label, "Inter-Bold.otf", 64, CREAM, track=6)
+            paste(v, with_alpha(img, a * 0.92), (50, 150))
+            ImageDraw.Draw(v).rectangle([72, 250, 142, 254], fill=CREAM + (int(200 * a),))
+        if sc.get("whisper") and t >= sc.get("whisper_at", 1.0):
+            wt = sc.get("whisper_at", 1.0)
+            a = fade_at(t, wt, 0.6, sc.get("whisper_end"), 0.5)
+            img = stack_text(sc["whisper"], "Inter-MediumItalic.otf", int(sc.get("whisper_size", 46) * 1.3), RED, 760, glow=RED)
+            if "whisper_xy" in sc:
+                x, y = M(*sc["whisper_xy"]); x -= img.width / 2; y -= img.height
+            elif enemy_head:
+                hx, hy, s_, f = enemy_head
+                x, y = M(hx, hy); x -= img.width / 2; y -= 80 * s_ * k + img.height
+            else:
+                x, y = VW / 2 - img.width / 2, 500
+            y -= 14 * (1 - ease((t - wt) / 1.0))
+            x = min(max(x, 40), VW - img.width - 40); y = min(max(y, 300), VH - 600)
+            paste(v, with_alpha(img, a), (int(x), int(y)))
+        if sc.get("caption") and t >= sc.get("caption_at", 0.4):
+            a = fade_at(t, sc.get("caption_at", 0.4), 0.5)
+            img = stack_text(sc["caption"], "Inter-SemiBold.otf", 66, CREAM, 940)
+            pos = sc.get("caption_pos")
+            y = VH / 2 - img.height / 2 if pos == "center" else (330 if pos == "top" else VH - 330)
+            paste(v, with_alpha(img, a), (int(VW / 2 - img.width / 2), int(y)))
+        return v
+
+    def draw_title_v(self, im, t):
+        tc = self.sc["title_card"]
+        word = text_img(tc["word"], "Inter-Black.otf", 150, CREAM, track=14, shadow=False)
+        paste(im, with_alpha(word, fade_at(t, 0.5, 1.2)), (int(VW / 2 - word.width / 2), 640))
+        y = 900
+        for i, line in enumerate(tc["sub"]):
+            img = stack_text(line, "Inter-LightItalic.otf", 52, CREAM, 900, shadow=False)
+            paste(im, with_alpha(img, fade_at(t, 2.4 + i * 1.6, 0.9) * 0.9), (int(VW / 2 - img.width / 2), y))
+            y += img.height + 6
+        img = stack_text(tc["punch"], "Inter-Bold.otf", 60, RED, 900, glow=RED)
+        paste(im, with_alpha(img, fade_at(t, 6.0, 0.8)), (int(VW / 2 - img.width / 2), y + 70))
+
+
+def merge(a, b):
+    out = dict(a)
+    for k2, v2 in b.items():
+        out[k2] = merge(a[k2], v2) if isinstance(v2, dict) and isinstance(a.get(k2), dict) else v2
+    return out
+
+
+def stack_text(text, fname, size, fill, maxw, glow=None, shadow=True):
+    """Word-wrap to maxw and stack centred lines."""
+    f = font(fname, size)
+    words, lines, cur = text.split(), [], ""
+    for w_ in words:
+        trial = (cur + " " + w_).strip()
+        if cur and f.getlength(trial) > maxw - 40:
+            lines.append(cur); cur = w_
+        else:
+            cur = trial
+    lines.append(cur)
+    imgs = [text_img(l, fname, size, fill, glow=glow, shadow=shadow) for l in lines]
+    lh = int(size * 1.22)
+    out = Image.new("RGBA", (max(i.width for i in imgs), lh * (len(imgs) - 1) + imgs[-1].height), (0, 0, 0, 0))
+    for n, i in enumerate(imgs):
+        out.alpha_composite(i, ((out.width - i.width) // 2, n * lh))
+    return out
+
 
 def paste(dst, src, pos):
     x, y = pos
@@ -755,6 +848,13 @@ def bandnoise(n, lo, hi, rnd):
 
 
 def build_audio(film, path):
+    """Phone-speaker-safe score: everything important lives above ~150 Hz.
+
+    Beds (per-scene levels, smoothed): drone= (dark minor pad), motif= (sparse piano),
+    pulse= (kick + chords + arpeggio), city= (street noise).
+    Events: piano:N[+N]@t, paper@t, rustle@t, thump@t, hit@t, alarm@a-b, clicks@a-b,
+    keys@a-b, steps@a-b, heartbeat@t, chord@t, swell@a-b. Whispers add a hiss swell.
+    """
     scenes = film["scenes"]
     total = sum(s["duration"] for s in scenes)
     N = int(total * SR) + SR
@@ -763,59 +863,64 @@ def build_audio(film, path):
     starts, acc = [], 0.0
     for s in scenes:
         starts.append(acc); acc += s["duration"]
+    tt = np.arange(N) / SR
 
     def add(sig, t, gain=1.0):
         i = int(t * SR)
-        if i >= N: return
+        if i >= N or i < 0: return
         j = min(N, i + len(sig))
         out[i:j] += (sig[: j - i] * gain).astype(np.float32)
 
     def env(n, a, dcy):
-        tt = np.arange(n) / SR
-        return np.minimum(1, tt / max(a, 1e-4)) * np.exp(-tt * dcy)
+        x = np.arange(n) / SR
+        return np.minimum(1, x / max(a, 1e-4)) * np.exp(-x * dcy)
 
-    def piano(note, t, g=0.22):
-        n = int(SR * 3.5); tt = np.arange(n) / SR; f = nfreq(note)
-        s = sum(np.sin(2 * np.pi * f * k * tt * (1 + 0.0007 * k)) / k ** 1.6 for k in range(1, 7))
-        add(s * env(n, 0.004, 1.6), t, g)
+    def tone(f, n, harm=6, bright=1.6):
+        x = np.arange(n) / SR
+        return sum(np.sin(2 * np.pi * f * k * x * (1 + 0.0006 * k)) / k ** bright for k in range(1, harm + 1))
 
-    def paper(t, g=0.35):
-        n = int(SR * 0.09); add(bandnoise(n, 400, 5000, rnd) * env(n, 0.002, 40), t, g)
-        add(np.sin(2 * np.pi * 110 * np.arange(n) / SR) * env(n, 0.001, 50), t, g * 0.5)
+    def piano(note, t, g=0.30, dec=1.4):
+        n = int(SR * 4.0)
+        add(tone(nfreq(note), n, 7, 1.5) * env(n, 0.004, dec), t, g)
 
-    def thump(t, g=0.6, f0=70):
-        n = int(SR * 0.6); tt = np.arange(n) / SR
-        add(np.sin(2 * np.pi * (f0 * tt + 40 * (1 - np.exp(-tt * 20)) / 20)) * env(n, 0.002, 8), t, g)
-        add(bandnoise(n, 100, 2000, rnd) * env(n, 0.001, 30), t, g * 0.4)
+    def paper(t, g=0.55):
+        n = int(SR * 0.10); add(bandnoise(n, 600, 6000, rnd) * env(n, 0.002, 38), t, g)
+        add(np.sin(2 * np.pi * 220 * np.arange(n) / SR) * env(n, 0.001, 45), t, g * 0.4)
+
+    def thump(t, g=0.7, f0=90):
+        n = int(SR * 0.6); x = np.arange(n) / SR
+        add(np.sin(2 * np.pi * (f0 * x + 60 * (1 - np.exp(-x * 20)) / 20)) * env(n, 0.002, 9), t, g)
+        add(bandnoise(n, 150, 3000, rnd) * env(n, 0.001, 25), t, g * 0.55)
 
     def kick(t, g=0.5):
-        n = int(SR * 0.35); tt = np.arange(n) / SR
-        ph = 2 * np.pi * (45 * tt + (110 - 45) * (1 - np.exp(-tt * 30)) / 30)
-        add(np.sin(ph) * env(n, 0.001, 11), t, g)
+        n = int(SR * 0.3); x = np.arange(n) / SR
+        ph = 2 * np.pi * (60 * x + (160 - 60) * (1 - np.exp(-x * 30)) / 30)
+        add(np.sin(ph) * env(n, 0.001, 12), t, g)
+        add(np.sin(2 * ph) * env(n, 0.001, 22), t, g * 0.45)          # audible body on phones
+        m = int(SR * 0.012); add(bandnoise(m, 1500, 6000, rnd) * env(m, 0.0003, 300), t, g * 0.35)
 
-    def alarm(t0, t1, g=0.16):
+    def alarm(t0, t1, g=0.20):
         t = t0
         while t < t1:
-            n = int(SR * 0.09); tt = np.arange(n) / SR
-            add(np.sign(np.sin(2 * np.pi * 2100 * tt)) * 0.5 * env(n, 0.002, 6), t, g)
-            add(np.sign(np.sin(2 * np.pi * 2100 * tt)) * 0.5 * env(n, 0.002, 6), t + 0.13, g)
+            n = int(SR * 0.09); x = np.arange(n) / SR
+            b = np.sign(np.sin(2 * np.pi * 1900 * x)) * 0.5 * env(n, 0.002, 6)
+            add(b, t, g); add(b, t + 0.13, g)
             t += 0.5
 
-    def whisper(t, g=0.10):
-        n = int(SR * 1.6); tt = np.arange(n) / SR
-        e = np.sin(np.pi * np.clip(tt / 1.6, 0, 1)) ** 2
-        add(bandnoise(n, 900, 4200, rnd) * e, t, g)
-        add(np.sin(2 * np.pi * 72 * tt) * e, t, g * 1.4)
+    def whisper(t, g=0.20):
+        n = int(SR * 1.8); x = np.arange(n) / SR
+        e = np.sin(np.pi * np.clip(x / 1.8, 0, 1)) ** 2
+        add(bandnoise(n, 1200, 5000, rnd) * e, t, g)
+        trem = 0.7 + 0.3 * np.sin(2 * np.pi * 6 * x)
+        add((np.sin(2 * np.pi * 233.1 * x) + 0.6 * np.sin(2 * np.pi * 247 * x)) * e * trem, t, g * 0.55)  # uneasy beating tone
 
-    def clicks(t0, t1, rate, g=0.12, lo=2000, hi=8000):
-        t = t0
-        n = int(SR * 0.02)
+    def clicks(t0, t1, rate, g=0.16, lo=2000, hi=8000):
+        t = t0; n = int(SR * 0.02)
         while t < t1:
             add(bandnoise(n, lo, hi, rnd) * env(n, 0.0005, 300), t, g * (0.6 + 0.4 * rnd.random()))
             t += rate * (0.6 + 0.8 * rnd.random())
 
-    # continuous beds: drone / pulse / city levels per scene, smoothed
-    def level_curve(key):
+    def level_curve(key, smooth=0.6):
         c = np.zeros(N, np.float32)
         for s, st in zip(scenes, starts):
             v = 0.0
@@ -823,41 +928,66 @@ def build_audio(film, path):
                 if e.startswith(key + "="):
                     v = float(e.split("=")[1])
             c[int(st * SR): int((st + s["duration"]) * SR)] = v
-        k = int(0.6 * SR)
+        k = int(smooth * SR)
         cs = np.cumsum(np.concatenate([np.zeros(k), c, np.full(k, c[-1])]))
         return ((cs[2 * k:] - cs[:-2 * k]) / (2 * k))[:N].astype(np.float32)
 
-    tt = np.arange(N) / SR
+    # --- drone: dark A-minor pad in the 110-660 Hz range with slow breathing
     drone = level_curve("drone")
-    lfo = 0.75 + 0.25 * np.sin(2 * np.pi * 0.07 * tt)
-    out += drone * lfo * (np.sin(2 * np.pi * 55 * tt) * 0.6 + np.sin(2 * np.pi * 82.41 * tt) * 0.35
-                          + np.sin(2 * np.pi * 110.3 * tt) * 0.18)
+    breath = 0.6 + 0.4 * np.sin(2 * np.pi * 0.11 * tt)
+    pad_d = np.zeros(N, np.float32)
+    for f, g in ((110.0, 0.5), (164.8, 0.35), (220.0, 0.35), (261.6, 0.22), (329.6, 0.12)):
+        pad_d += g * (np.sin(2 * np.pi * f * tt) + 0.35 * np.sin(4 * np.pi * f * tt + 0.3)
+                      + 0.15 * np.sin(6 * np.pi * f * tt + 0.7)) * (0.8 + 0.2 * np.sin(2 * np.pi * (0.05 + f / 4000) * tt))
+    out += drone * breath * pad_d * 1.6
+
+    # --- motif: sparse, lonely piano phrase every ~3.2 s
+    motif = level_curve("motif", 0.2)
+    phrase = ["A3", "C4", "E4", "D4", "C4", "B3", "A3", "E3"]
+    t, i = 0.0, 0
+    while t < total:
+        lv = motif[int(t * SR)]
+        if lv > 0.05:
+            piano(phrase[i % len(phrase)], t, 0.24 * lv, 1.0)
+            if i % 4 == 0:
+                piano("A2", t, 0.12 * lv, 0.8)
+        i += 1
+        t += 1.6
+
+    # --- pulse: kick + chords + arpeggio, 92 bpm
     pulse = level_curve("pulse")
-    # pad chords Am F C G at 92 bpm, 2 bars each
     beat = 60 / 92
-    chords = [["A2", "C4", "E4", "A4"], ["F2", "A3", "C4", "F4"], ["C3", "E4", "G4", "C5"], ["G2", "B3", "D4", "G4"]]
-    pad = np.zeros(N, np.float32)
+    chords = [["A3", "C4", "E4"], ["F3", "A3", "C4"], ["C4", "E4", "G4"], ["G3", "B3", "D4"]]
+    roots = ["A2", "F2", "C3", "G2"]
     seg = beat * 8
-    for i in range(int(total / seg) + 2):
-        ch = chords[i % 4]
-        a, b = int(i * seg * SR), min(N, int((i + 1) * seg * SR) + int(0.3 * SR))
+    pad = np.zeros(N, np.float32)
+    for k in range(int(total / seg) + 2):
+        a, b = int(k * seg * SR), min(N, int((k + 1) * seg * SR) + int(0.3 * SR))
         if a >= N: break
-        ts = np.arange(b - a) / SR
-        e = np.minimum(1, ts / 0.8) * np.minimum(1, np.maximum(0, (seg + 0.3 - ts)) / 0.6)
-        pad[a:b] += e * sum(np.sin(2 * np.pi * nfreq(n) * ts) + 0.3 * np.sin(4 * np.pi * nfreq(n) * ts) for n in ch) / 5
-    out += pad * pulse * 0.5
-    pstart = None
-    bt = 0.0
+        x = np.arange(b - a) / SR
+        e = np.minimum(1, x / 0.6) * np.minimum(1, np.maximum(0, (seg + 0.3 - x)) / 0.5)
+        sig = sum(np.sin(2 * np.pi * nfreq(n) * x) + 0.4 * np.sin(4 * np.pi * nfreq(n) * x) for n in chords[k % 4])
+        sig += 0.8 * (np.sin(2 * np.pi * nfreq(roots[k % 4]) * x) + 0.5 * np.sin(4 * np.pi * nfreq(roots[k % 4]) * x))
+        pad[a:b] += e * sig / 4
+    out += pad * pulse * 0.55
+    bt, step = 0.0, 0
     while bt < total:
         lv = pulse[int(bt * SR)]
         if lv > 0.05:
-            kick(bt, 0.55 * lv)
-            if lv > 0.55:
-                n = int(SR * 0.05)
-                add(bandnoise(n, 5000, 12000, rnd) * env(n, 0.001, 60), bt + beat / 2, 0.08 * lv)
-        bt += beat
+            if step % 2 == 0:
+                kick(bt, 0.6 * lv)
+            if lv > 0.25:  # eighth-note arpeggio
+                ch = chords[int(bt / seg) % 4]
+                nn = (ch + [ch[1]])[step % 4]
+                n = nn[:-1] + str(int(nn[-1]) + 1)
+                piano(n, bt, 0.10 * lv, 5.0)
+            if lv > 0.55 and step % 2 == 1:
+                m = int(SR * 0.05)
+                add(bandnoise(m, 5000, 12000, rnd) * env(m, 0.001, 60), bt, 0.10 * lv)
+        bt += beat / 2; step += 1
+
     city = level_curve("city")
-    out += city * np.tile(bandnoise(SR * 4, 150, 1200, rnd), int(N / (SR * 4)) + 1)[:N] * 0.6
+    out += city * np.tile(bandnoise(SR * 4, 250, 2500, rnd), int(N / (SR * 4)) + 1)[:N] * 0.9
 
     for s, st in zip(scenes, starts):
         if s.get("whisper"):
@@ -875,49 +1005,57 @@ def build_audio(film, path):
                 a0 = float(when) if when else 0.0; a1 = None
             t0 = st + a0
             if name == "piano":
-                for k, nn in enumerate(arg.split("+")):
-                    piano(nn, t0 + 0.0 * k)
+                for nn in arg.split("+"):
+                    piano(nn, t0, 0.32)
             elif name == "paper":
                 paper(t0)
             elif name == "rustle":
-                n = int(SR * 0.7); add(bandnoise(n, 1500, 7000, rnd) * np.sin(np.pi * np.arange(n) / n), t0, 0.12)
+                n = int(SR * 0.7); add(bandnoise(n, 1500, 7000, rnd) * np.sin(np.pi * np.arange(n) / n), t0, 0.22)
             elif name == "thump":
-                thump(t0)
+                thump(t0, 0.9)
             elif name == "hit":
-                thump(t0, 0.9, 38)
-                n = int(SR * 4); add(np.sin(2 * np.pi * 41 * np.arange(n) / SR) * env(n, 0.01, 1.0), t0, 0.35)
+                thump(t0, 1.0, 70)
+                n = int(SR * 4); x = np.arange(n) / SR
+                add((np.sin(2 * np.pi * 110 * x) + 0.6 * np.sin(2 * np.pi * 116.5 * x) + 0.4 * np.sin(2 * np.pi * 220 * x))
+                    * env(n, 0.005, 0.9), t0, 0.35)
             elif name == "alarm":
                 alarm(t0, st + a1 if a1 else t0 + 1.0)
             elif name == "clicks":
-                clicks(t0, st + a1, 0.18, 0.10)
+                clicks(t0, st + a1, 0.18, 0.16)
             elif name == "keys":
-                clicks(t0, st + a1, 0.09, 0.13, 1500, 6000)
+                clicks(t0, st + a1, 0.09, 0.18, 1500, 6000)
             elif name == "steps":
-                clicks(t0, st + a1, 0.28, 0.25, 80, 1200)
+                clicks(t0, st + a1, 0.28, 0.35, 200, 2500)
             elif name == "heartbeat":
                 t = t0
                 while t < st + s["duration"]:
-                    thump(t, 0.5, 48); thump(t + 0.22, 0.32, 44); t += 1.05
+                    thump(t, 0.75, 80); thump(t + 0.22, 0.5, 72); t += 1.05
             elif name == "chord":
-                for nn in ["A2", "E3", "A3", "C#4", "E4", "A4"]:
-                    piano(nn, t0, 0.13)
-                n = int(SR * 5); ts = np.arange(n) / SR
-                add(sum(np.sin(2 * np.pi * nfreq(x) * ts) for x in ["A3", "C#4", "E4"]) / 3 * env(n, 0.4, 0.5), t0, 0.22)
+                for nn in ["A2", "E3", "A3", "C#4", "E4", "A4", "C#5"]:
+                    piano(nn, t0, 0.16, 0.6)
+                n = int(SR * 5); x = np.arange(n) / SR
+                add(sum(np.sin(2 * np.pi * nfreq(v) * x) for v in ["A3", "C#4", "E4", "A4"]) / 4 * env(n, 0.4, 0.45), t0, 0.35)
             elif name == "swell":
-                n = int(SR * (a1 - a0 if a1 else 3)); ts = np.arange(n) / SR
-                e = (ts / ts[-1]) ** 2
-                add(bandnoise(n, 200, 6000, rnd) * e, t0, 0.07)
+                n = int(SR * (a1 - a0 if a1 else 3)); x = np.arange(n) / SR
+                add(bandnoise(n, 400, 7000, rnd) * (x / x[-1]) ** 2, t0, 0.10)
 
-    # master: gentle limiter, normalise
-    out = np.tanh(out * 1.3) / np.tanh(1.3)
+    out = np.tanh(out * 1.2) / np.tanh(1.2)
     out = out[: int(total * SR)]
     fade = int(0.8 * SR); out[-fade:] *= np.linspace(1, 0, fade)
     out = out / (np.abs(out).max() + 1e-9) * 0.89
     st = np.stack([out, np.roll(out, 24) * 0.97], 1)
-    pcm = (st * 32767).astype("<i2")
-    with wave.open(path, "wb") as w:
+    raw = path + ".raw.wav"
+    with wave.open(raw, "wb") as w:
         w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
-        w.writeframes(pcm.tobytes())
+        w.writeframes((st * 32767).astype("<i2").tobytes())
+    # two-pass loudnorm to -14 LUFS / -1 dBTP (social platform target)
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-i", raw, "-af", "loudnorm=I=-14:TP=-1.0:LRA=11:print_format=json",
+                        "-f", "null", "-"], capture_output=True, text=True)
+    m = json.loads(r.stderr[r.stderr.rindex("{"):])
+    af = ("loudnorm=I=-14:TP=-1.0:LRA=11:measured_I={input_i}:measured_TP={input_tp}:measured_LRA={input_lra}:"
+          "measured_thresh={input_thresh}:offset={target_offset}:linear=true").format(**m)
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw, "-af", af, "-ar", str(SR), path], check=True)
+    os.remove(raw)
 
 
 # ---------------------------------------------------------------- driver
@@ -925,14 +1063,14 @@ def render_scene(args):
     idx, film, out, res, fps = args
     sc = Scene(film["scenes"][idx], film)
     n = max(1, int(round(sc.dur * fps)))
-    ow, oh = int(res * 16 / 9) // 2 * 2, res
+    ow, oh = (int(res * 16 / 9) // 2 * 2, res) if not film.get("_vertical") else (res, int(res * 16 / 9) // 2 * 2)
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{ow}x{oh}",
            "-r", str(fps), "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
            "-pix_fmt", "yuv420p", "-r", str(fps), out]
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     for f in range(n):
         im = sc.frame(f / fps)
-        if (ow, oh) != (W, H):
+        if im.size != (ow, oh):
             im = im.resize((ow, oh), Image.LANCZOS)
         p.stdin.write(im.tobytes())
     p.stdin.close(); p.wait()
@@ -944,16 +1082,18 @@ def contact_sheet(film, path, at=0.6):
     acc = 0
     for i, s in enumerate(film["scenes"]):
         sc = Scene(s, film)
-        im = sc.frame(sc.dur * s.get("sheet_at", at)).resize((480, 270), Image.LANCZOS)
+        tw, th = (216, 384) if film.get("_vertical") else (480, 270)
+        im = sc.frame(sc.dur * s.get("sheet_at", at)).resize((tw, th), Image.LANCZOS)
         d = ImageDraw.Draw(im)
         d.rectangle([0, 0, 140, 30], fill=(0, 0, 0))
         d.text((6, 4), f"#{s.get('id', i + 1)}  {int(acc // 60)}:{acc % 60:04.1f}", font=font("Inter-Bold.otf", 18), fill=(255, 255, 255))
         thumbs.append(im); acc += s["duration"]
-    cols = 5
+    tw, th = thumbs[0].size
+    cols = 9 if film.get("_vertical") else 5
     rows = math.ceil(len(thumbs) / cols)
-    sheet = Image.new("RGB", (cols * 484 + 4, rows * 274 + 4), (30, 30, 30))
+    sheet = Image.new("RGB", (cols * (tw + 4) + 4, rows * (th + 4) + 4), (30, 30, 30))
     for i, im in enumerate(thumbs):
-        sheet.paste(im, (4 + (i % cols) * 484, 4 + (i // cols) * 274))
+        sheet.paste(im, (4 + (i % cols) * (tw + 4), 4 + (i // cols) * (th + 4)))
     sheet.save(path, quality=90)
 
 
@@ -966,9 +1106,18 @@ def main():
     ap.add_argument("--fps", type=int)
     ap.add_argument("--preview", action="store_true")
     ap.add_argument("--only", help="comma list of scene indices (1-based) to render as stills")
+    ap.add_argument("--vertical", action="store_true", help="9:16 cut (uses per-scene vpan / v overrides)")
+    ap.add_argument("--remux-audio", metavar="MP4", help="rebuild the score and swap it into an existing MP4")
     ap.add_argument("--workers", type=int, default=os.cpu_count())
     a = ap.parse_args()
     film = json.load(open(a.story))
+    film["_vertical"] = a.vertical
+    if a.remux_audio:
+        tmp = tempfile.mkdtemp(prefix="kaz_"); wav = os.path.join(tmp, "score.wav")
+        build_audio(film, wav)
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", a.remux_audio, "-i", wav, "-map", "0:v", "-map", "1:a",
+                        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", a.out], check=True)
+        print("remuxed ->", a.out); return
     if a.sheet:
         contact_sheet(film, a.sheet); print("sheet ->", a.sheet)
     if a.only:
