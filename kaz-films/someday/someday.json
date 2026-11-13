@@ -1,0 +1,1013 @@
+{
+ "title": "SOMEDAY",
+ "niche": "procrastination",
+ "enemy_name": "Tomorrow",
+ "structure": "Classic rise",
+ "fps": 24,
+ "scenes": [
+  {
+   "id": 1,
+   "beat": "loop",
+   "duration": 4,
+   "set": "void",
+   "palette": "cold",
+   "push": 0.02,
+   "caption": "Every Monday, he wrote the same note.",
+   "caption_pos": "center",
+   "caption_at": 0.5,
+   "sound": [
+    "drone=0.10"
+   ]
+  },
+  {
+   "id": 2,
+   "beat": "loop",
+   "duration": 6,
+   "set": "desk",
+   "palette": "cold",
+   "focus": [
+    1200,
+    560
+   ],
+   "hero": {
+    "pose": "look",
+    "x": 1180,
+    "seq": [
+     [
+      0,
+      "look"
+     ],
+     [
+      1.2,
+      "lift_note"
+     ],
+     [
+      2.6,
+      "look"
+     ]
+    ]
+   },
+   "props": [
+    {
+     "type": "laptop",
+     "state": "closed"
+    },
+    {
+     "type": "note",
+     "x": 1240,
+     "y": 545,
+     "size": 70,
+     "appear": 1.8,
+     "pop": 1.8,
+     "fade": 0.05
+    }
+   ],
+   "day": "DAY 1",
+   "sheet_at": 0.8,
+   "sound": [
+    "drone=0.10",
+    "paper@1.8",
+    "piano:E4@2.0"
+   ]
+  },
+  {
+   "id": 3,
+   "beat": "loop",
+   "duration": 6,
+   "set": "desk",
+   "palette": "cold",
+   "hero": {
+    "pose": "sit",
+    "x": 885
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 640,
+    "scale": 0.5,
+    "appear": 1.6
+   },
+   "props": [
+    {
+     "type": "laptop",
+     "state": "closed",
+     "open_at": 0.8
+    },
+    {
+     "type": "note_wall",
+     "count": 1
+    }
+   ],
+   "whisper": "tomorrow.",
+   "whisper_at": 2.8,
+   "day": "DAY 1",
+   "sound": [
+    "drone=0.12"
+   ]
+  },
+  {
+   "id": 4,
+   "beat": "loop",
+   "duration": 6,
+   "set": "bedroom",
+   "palette": "night",
+   "hero": {
+    "pose": "lie",
+    "x": 900,
+    "y": 748,
+    "seq": [
+     [
+      0,
+      "lie"
+     ],
+     [
+      1.8,
+      "lie_reach"
+     ],
+     [
+      2.8,
+      "lie"
+     ]
+    ]
+   },
+   "props": [
+    {
+     "type": "clock",
+     "x": 600,
+     "y": 742,
+     "ring": [
+      0.4,
+      2.3
+     ]
+    }
+   ],
+   "day": "DAY 2",
+   "sheet_at": 0.35,
+   "sound": [
+    "drone=0.10",
+    "alarm@0.4-2.3"
+   ]
+  },
+  {
+   "id": 5,
+   "beat": "enemy",
+   "duration": 6,
+   "set": "desk",
+   "palette": "cold",
+   "hero": {
+    "pose": "shrug",
+    "x": 720
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 500,
+    "scale": 0.6,
+    "appear": 0.3,
+    "fade": 0.6
+   },
+   "props": [
+    {
+     "type": "laptop",
+     "state": "closed"
+    },
+    {
+     "type": "note_wall",
+     "count": 2,
+     "new_at": 1.0
+    }
+   ],
+   "whisper": "you'll feel readier tomorrow.",
+   "whisper_at": 2.2,
+   "day": "DAY 30",
+   "day_from": 2,
+   "sound": [
+    "drone=0.12",
+    "paper@1.0"
+   ]
+  },
+  {
+   "id": 6,
+   "beat": "enemy",
+   "duration": 6,
+   "set": "couch",
+   "palette": "night",
+   "hero": {
+    "pose": "slump",
+    "x": 960
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 850,
+    "scale": 0.9,
+    "appear": 0.3
+   },
+   "props": [
+    {
+     "type": "phone"
+    }
+   ],
+   "whisper": "you've earned a break.",
+   "whisper_at": 1.8,
+   "day": "DAY 31",
+   "sound": [
+    "drone=0.12",
+    "clicks@0.5-5.5"
+   ]
+  },
+  {
+   "id": 7,
+   "beat": "enemy",
+   "duration": 6,
+   "set": "desk",
+   "palette": "cold",
+   "hero": {
+    "pose": "head_in_hand",
+    "x": 885
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 620,
+    "scale": 0.8,
+    "appear": 0.2
+   },
+   "props": [
+    {
+     "type": "laptop",
+     "state": "open"
+    },
+    {
+     "type": "note_wall",
+     "count": 24
+    }
+   ],
+   "whisper": "what if it's the wrong time?",
+   "whisper_at": 2.0,
+   "day": "DAY 180",
+   "day_from": 31,
+   "sound": [
+    "drone=0.18"
+   ]
+  },
+  {
+   "id": 8,
+   "beat": "identity",
+   "duration": 6,
+   "set": "window",
+   "palette": "cold",
+   "hero": {
+    "pose": "look",
+    "x": 560
+   },
+   "walkers": {
+    "list": [
+     [
+      700,
+      90,
+      0.42,
+      680
+     ],
+     [
+      1500,
+      -70,
+      0.38,
+      668
+     ],
+     [
+      880,
+      110,
+      0.4,
+      690
+     ],
+     [
+      1300,
+      55,
+      0.36,
+      662
+     ]
+    ],
+    "alpha": 0.8
+   },
+   "caption": "Everyone else seemed to be going somewhere.",
+   "caption_at": 1.0,
+   "day": "DAY 400",
+   "day_from": 180,
+   "sound": [
+    "drone=0.12",
+    "city=0.10"
+   ]
+  },
+  {
+   "id": 9,
+   "beat": "identity",
+   "duration": 6,
+   "set": "mirror",
+   "palette": "cold",
+   "hero": {
+    "pose": "look_down",
+    "x": 860
+   },
+   "enemy": {
+    "pose": "stand",
+    "x": 1200,
+    "y": 700,
+    "scale": 0.75,
+    "appear": 0.6,
+    "fade": 1.2,
+    "clip": [
+     1076,
+     276,
+     1324,
+     644
+    ]
+   },
+   "whisper": "you're not a starter.",
+   "whisper_at": 1.8,
+   "whisper_xy": [
+    1360,
+    330
+   ],
+   "day": "DAY 401",
+   "sound": [
+    "drone=0.14"
+   ]
+  },
+  {
+   "id": 10,
+   "beat": "identity",
+   "duration": 6,
+   "set": "desk",
+   "palette": "dark",
+   "hero": {
+    "pose": "look",
+    "x": 1060,
+    "seq": [
+     [
+      0,
+      "look"
+     ],
+     [
+      1.2,
+      "sweep"
+     ],
+     [
+      2.6,
+      "hang"
+     ]
+    ]
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 700,
+    "scale": 1.0,
+    "appear": 0.1
+   },
+   "props": [
+    {
+     "type": "laptop",
+     "state": "closed"
+    },
+    {
+     "type": "note_wall",
+     "count": 30,
+     "fade_out": [
+      1.4,
+      2.2
+     ]
+    },
+    {
+     "type": "drawer",
+     "open": [
+      1.6,
+      3.4
+     ]
+    }
+   ],
+   "whisper": "people like you don't finish.",
+   "whisper_at": 3.8,
+   "day": "DAY 700",
+   "day_from": 401,
+   "sheet_at": 0.8,
+   "sound": [
+    "drone=0.20",
+    "thump@3.4"
+   ]
+  },
+  {
+   "id": 11,
+   "beat": "rock_bottom",
+   "duration": 6,
+   "set": "bedroom",
+   "palette": "black",
+   "hero": {
+    "pose": "sit_curl",
+    "x": 960
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 620,
+    "scale": 1.3,
+    "appear": 0.2
+   },
+   "whisper": "nobody's waiting.",
+   "whisper_at": 2.0,
+   "day": "DAY 1,000",
+   "day_from": 700,
+   "sound": [
+    "drone=0.04",
+    "heartbeat@0.2"
+   ]
+  },
+  {
+   "id": 12,
+   "beat": "rock_bottom",
+   "duration": 5,
+   "set": "void",
+   "palette": "black",
+   "hero": {
+    "pose": "curl",
+    "x": 1100,
+    "scale": 0.6
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 780,
+    "scale": 1.8,
+    "appear": 0.0,
+    "fade": 0.6
+   },
+   "whisper": "quit.",
+   "whisper_at": 1.6,
+   "whisper_size": 72,
+   "sound": [
+    "drone=0.0",
+    "hit@1.6"
+   ]
+  },
+  {
+   "id": 13,
+   "beat": "rock_bottom",
+   "duration": 4,
+   "set": "void",
+   "palette": "black",
+   "focus": [
+    1100,
+    800
+   ],
+   "hero": {
+    "pose": "curl",
+    "x": 1100,
+    "scale": 0.6
+   },
+   "caption": "He believed it.",
+   "caption_pos": "center",
+   "caption_at": 0.6,
+   "sound": [
+    "drone=0.0"
+   ]
+  },
+  {
+   "id": 14,
+   "beat": "turn",
+   "duration": 6,
+   "set": "desk",
+   "palette": "dawn",
+   "hero": {
+    "pose": "reach_low",
+    "x": 1120,
+    "seq": [
+     [
+      0,
+      "reach_low"
+     ],
+     [
+      2.2,
+      "lift_note"
+     ]
+    ]
+   },
+   "props": [
+    {
+     "type": "laptop",
+     "state": "closed"
+    },
+    {
+     "type": "drawer",
+     "open": [
+      0,
+      99
+     ]
+    },
+    {
+     "type": "hand_note",
+     "appear": 2.2,
+     "size": 54
+    }
+   ],
+   "caption": "Then he found the first note.",
+   "caption_at": 0.5,
+   "day": "DAY 1,460",
+   "day_from": 1000,
+   "sheet_at": 0.75,
+   "sound": [
+    "drone=0.06",
+    "piano:E4@0.3",
+    "rustle@2.0"
+   ]
+  },
+  {
+   "id": 15,
+   "beat": "turn",
+   "duration": 6,
+   "set": "closeup",
+   "palette": "dawn",
+   "push": 0.05,
+   "focus": [
+    960,
+    470
+   ],
+   "props": [
+    {
+     "type": "note",
+     "x": 960,
+     "y": 470,
+     "size": 460,
+     "text": "START\nMON \u00b7 DAY 1",
+     "big": true,
+     "rot": -3,
+     "jitter": 1.5
+    },
+    {
+     "type": "arm_in",
+     "x": 1180,
+     "y": 690,
+     "jitter": 1.5,
+     "front": true
+    }
+   ],
+   "caption": "Four years. Same note.",
+   "caption_at": 1.2,
+   "day": "DAY 1,460",
+   "sound": [
+    "drone=0.06",
+    "rustle@0.3"
+   ],
+   "caption_pos": "top"
+  },
+  {
+   "id": 16,
+   "beat": "turn",
+   "duration": 6,
+   "set": "desk",
+   "palette": "dawn",
+   "hero": {
+    "pose": "sit",
+    "x": 885,
+    "seq": [
+     [
+      0,
+      "sit",
+      885
+     ],
+     [
+      1.2,
+      "look",
+      700
+     ]
+    ]
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 460,
+    "scale": 1.0,
+    "appear": 0.0,
+    "fade": 0.4
+   },
+   "props": [
+    {
+     "type": "laptop",
+     "state": "closed"
+    }
+   ],
+   "whisper": "tomorrow.",
+   "whisper_at": 0.4,
+   "whisper_end": 2.4,
+   "caption": "Tomorrow isn't a day. It's a direction.",
+   "caption_at": 2.4,
+   "sheet_at": 0.7,
+   "sound": [
+    "drone=0.04",
+    "pulse=0.15"
+   ]
+  },
+  {
+   "id": 17,
+   "beat": "climb",
+   "duration": 6,
+   "set": "desk",
+   "palette": "amber",
+   "hero": {
+    "pose": "hands_head",
+    "x": 700,
+    "headband": 1.0,
+    "seq": [
+     [
+      0,
+      "hands_head",
+      700
+     ],
+     [
+      2.2,
+      "sit_type",
+      885
+     ]
+    ]
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 470,
+    "scale": 0.9,
+    "appear": 0.0,
+    "fade": 0.3
+   },
+   "props": [
+    {
+     "type": "laptop",
+     "state": "open"
+    }
+   ],
+   "caption": "He didn't wait to feel ready.",
+   "caption_at": 2.4,
+   "day": "DAY 1",
+   "sound": [
+    "pulse=0.30",
+    "keys@2.3-6"
+   ]
+  },
+  {
+   "id": 18,
+   "beat": "climb",
+   "duration": 6,
+   "set": "bedroom",
+   "palette": "amber",
+   "hero": {
+    "pose": "reach_low",
+    "x": 740,
+    "facing": "left",
+    "headband": true,
+    "seq": [
+     [
+      0,
+      "reach_low",
+      740,
+      null,
+      "left"
+     ],
+     [
+      1.6,
+      "arms_up",
+      820,
+      null,
+      "right"
+     ]
+    ]
+   },
+   "props": [
+    {
+     "type": "clock",
+     "x": 600,
+     "y": 742,
+     "ring": [
+      0.2,
+      0.7
+     ],
+     "off_at": 0.8
+    }
+   ],
+   "day": "DAY 2",
+   "sound": [
+    "pulse=0.35",
+    "alarm@0.2-0.6"
+   ]
+  },
+  {
+   "id": 19,
+   "beat": "climb",
+   "duration": 5,
+   "set": "desk",
+   "palette": "amber",
+   "hero": {
+    "pose": "sit_type",
+    "x": 885,
+    "headband": true
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 620,
+    "scale": 0.8,
+    "appear": 0.0,
+    "fade": 0.3
+   },
+   "props": [
+    {
+     "type": "laptop",
+     "state": "open"
+    },
+    {
+     "type": "pages",
+     "x": 1290,
+     "from": 4,
+     "to": 30
+    }
+   ],
+   "whisper": "you're tired.",
+   "whisper_at": 1.4,
+   "day": "DAY 30",
+   "sound": [
+    "pulse=0.45",
+    "keys@0-5"
+   ]
+  },
+  {
+   "id": 20,
+   "beat": "climb",
+   "duration": 5,
+   "set": "street",
+   "palette": "amber",
+   "hero": {
+    "pose": "walk",
+    "headband": true,
+    "path": [
+     [
+      0,
+      250,
+      860
+     ],
+     [
+      5,
+      1500,
+      860
+     ]
+    ]
+   },
+   "walkers": {
+    "list": [
+     [
+      120,
+      60,
+      0.55,
+      872
+     ],
+     [
+      1820,
+      -70,
+      0.5,
+      872
+     ]
+    ],
+    "alpha": 0.45,
+    "clip": [
+     0,
+     0,
+     1920,
+     1080
+    ]
+   },
+   "props": [
+    {
+     "type": "bag"
+    }
+   ],
+   "day": "DAY 90",
+   "sound": [
+    "pulse=0.50",
+    "steps@0-5"
+   ]
+  },
+  {
+   "id": 21,
+   "beat": "climb",
+   "duration": 5,
+   "set": "stairs",
+   "palette": "golden",
+   "hero": {
+    "pose": "climb",
+    "headband": true,
+    "path": [
+     [
+      0,
+      535,
+      872
+     ],
+     [
+      5,
+      985,
+      680
+     ]
+    ]
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 235,
+    "y": 1000,
+    "scale": 0.6,
+    "appear": 0.0,
+    "fade": 0.3
+   },
+   "caption": "Some days Tomorrow still won.",
+   "caption_at": 1.0,
+   "day": "DAY 200",
+   "sound": [
+    "pulse=0.60",
+    "steps@0-5",
+    "swell@2-5"
+   ]
+  },
+  {
+   "id": 22,
+   "beat": "climb",
+   "duration": 6,
+   "set": "stairs",
+   "palette": "golden",
+   "focus": [
+    1300,
+    500
+   ],
+   "hero": {
+    "pose": "climb",
+    "headband": true,
+    "path": [
+     [
+      0,
+      1135,
+      616
+     ],
+     [
+      6,
+      1735,
+      360
+     ]
+    ]
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 540,
+    "y": 872,
+    "scale": 0.5,
+    "appear": 0.0,
+    "fade": 0.3
+   },
+   "caption": "Most days, it didn't.",
+   "caption_at": 1.0,
+   "day": "DAY 365",
+   "day_from": 200,
+   "sound": [
+    "pulse=0.75",
+    "steps@0-6",
+    "swell@0-6"
+   ]
+  },
+  {
+   "id": 23,
+   "beat": "summit",
+   "duration": 6,
+   "set": "summit",
+   "palette": "golden",
+   "focus": [
+    960,
+    560
+   ],
+   "hero": {
+    "pose": "stand",
+    "x": 960,
+    "y": 646,
+    "headband": true,
+    "seq": [
+     [
+      0,
+      "stand"
+     ],
+     [
+      0.6,
+      "arms_up"
+     ]
+    ]
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 300,
+    "y": 1040,
+    "scale": 0.45,
+    "appear": 0.0,
+    "fade": 0.3
+   },
+   "day": "DAY 365",
+   "sound": [
+    "pulse=0.0",
+    "chord@0.4"
+   ]
+  },
+  {
+   "id": 24,
+   "beat": "bookend",
+   "duration": 8,
+   "set": "desk",
+   "palette": "amber",
+   "focus": [
+    1200,
+    600
+   ],
+   "hero": {
+    "pose": "look",
+    "x": 1180,
+    "headband": true,
+    "seq": [
+     [
+      0,
+      "look"
+     ],
+     [
+      1.2,
+      "lift_note"
+     ],
+     [
+      2.6,
+      "reach_forward"
+     ],
+     [
+      4.0,
+      "look"
+     ]
+    ]
+   },
+   "enemy": {
+    "pose": "lean",
+    "x": 560,
+    "scale": 0.45,
+    "appear": 3.5,
+    "fade": 0.8
+   },
+   "props": [
+    {
+     "type": "laptop",
+     "state": "closed"
+    },
+    {
+     "type": "book",
+     "x": 1260,
+     "y": 690
+    },
+    {
+     "type": "note",
+     "size": 56,
+     "path": [
+      [
+       0,
+       1240,
+       545
+      ],
+      [
+       2.6,
+       1240,
+       545
+      ],
+      [
+       3.6,
+       1295,
+       640
+      ]
+     ],
+     "front": true
+    }
+   ],
+   "whisper": "tomorrow?",
+   "whisper_at": 5.0,
+   "sheet_at": 0.8,
+   "sound": [
+    "pulse=0.12",
+    "paper@3.6",
+    "piano:E4@4.0"
+   ]
+  },
+  {
+   "id": 25,
+   "beat": "title",
+   "duration": 12,
+   "set": "title",
+   "push": 0.015,
+   "fade_in": 0.6,
+   "fade_out": 1.0,
+   "title_card": {
+    "word": "SOMEDAY",
+    "sub": [
+     "He wrote \u201cstart\u201d for four years.",
+     "He started on one Monday."
+    ],
+    "punch": "Tomorrow is where plans go to wait."
+   },
+   "sheet_at": 0.8,
+   "sound": [
+    "piano:C4@0.6",
+    "piano:A3+E4@6.0"
+   ]
+  }
+ ]
+}
